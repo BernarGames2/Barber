@@ -23,16 +23,25 @@ import { cn } from '@/lib/cn';
 import { initials } from '@/lib/format';
 import { useSession } from '@/lib/session';
 
-const NAV = [
+interface NavItem {
+  href: string;
+  label: string;
+  icon: typeof LayoutGrid;
+  exact?: boolean;
+  /** Selo de "em breve" para áreas ainda não entregues. */
+  soon?: string;
+}
+
+const NAV: readonly NavItem[] = [
   { href: '/painel', label: 'Início', icon: LayoutGrid, exact: true },
   { href: '/painel/agenda', label: 'Agenda', icon: CalendarDays },
   { href: '/painel/clientes', label: 'Clientes', icon: Users },
   { href: '/painel/servicos', label: 'Serviços', icon: Scissors },
   { href: '/painel/profissionais', label: 'Profissionais', icon: UserRound },
   { href: '/painel/voice-studio', label: 'Voice Studio', icon: AudioLines },
-  { href: '/painel/conversas', label: 'Conversas', icon: MessagesSquare, soon: 'Fase 4' },
+  { href: '/painel/conversas', label: 'Conversas', icon: MessagesSquare },
   { href: '/painel/configuracoes', label: 'Configurações', icon: Settings },
-] as const;
+];
 
 function useActive() {
   const pathname = usePathname();
@@ -98,7 +107,7 @@ function NavList({ onNavigate }: { onNavigate?: () => void }) {
   return (
     <nav className="flex flex-col gap-0.5" aria-label="Navegação principal">
       {NAV.map((item) => {
-        const active = isActive(item.href, 'exact' in item ? item.exact : false);
+        const active = isActive(item.href, item.exact ?? false);
         const Icon = item.icon;
         return (
           <Link
@@ -121,7 +130,7 @@ function NavList({ onNavigate }: { onNavigate?: () => void }) {
               )}
             />
             <span className="flex-1">{item.label}</span>
-            {'soon' in item ? (
+            {item.soon ? (
               <span className="rounded-md bg-white/5 px-1.5 py-0.5 text-[10px] font-medium tracking-wide text-ink-400 uppercase">
                 {item.soon}
               </span>
@@ -173,7 +182,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
 
 function MobileTabBar({ onMore }: { onMore: () => void }) {
   const isActive = useActive();
-  const items = [NAV[0], NAV[1], NAV[2]];
+  const items = NAV.slice(0, 3);
   return (
     <nav
       className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-4 border-t border-ink-150 bg-white/95 backdrop-blur lg:hidden [padding-bottom:env(safe-area-inset-bottom)]"
@@ -181,7 +190,7 @@ function MobileTabBar({ onMore }: { onMore: () => void }) {
     >
       {items.map((item) => {
         const Icon = item.icon;
-        const active = isActive(item.href, 'exact' in item ? item.exact : false);
+        const active = isActive(item.href, item.exact ?? false);
         return (
           <Link
             key={item.href}

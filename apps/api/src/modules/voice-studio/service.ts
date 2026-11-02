@@ -158,8 +158,8 @@ export async function getVoiceStudio(ctx: ServiceContext): Promise<VoiceStudioDt
         advancedLanguage: Boolean(plan?.features.voiceStudio),
         customPersonas: Boolean(plan?.features.customPersonas),
       },
-      // Provedores de voz e de modelo de linguagem entram na Fase 4 (ver docs/INTEGRATIONS.md).
-      integrations: { tts: false, llm: false },
+      // Voz (TTS) ainda sem provedor; o modelo de linguagem depende de ANTHROPIC_API_KEY.
+      integrations: { tts: false, llm: Boolean(ctx.deps.llm) },
     };
   });
 }
@@ -373,4 +373,28 @@ export async function createCustomPersona(
     }
     throw Errors.conflict('PERSONA_NAME_EXISTS', 'Já existe uma personagem com este nome.');
   });
+}
+
+/**
+ * Instruções compiladas a partir da configuração SALVA — usadas ao iniciar uma conversa
+ * (ficam congeladas nela). Sem configuração, não há atendimento por IA.
+ */
+export async function compileSavedReceptionist(tx: Tx, tenantId: string, channel: Channel) {
+  const [config] = await tx.select().from(receptionistConfigs).limit(1);
+  if (!config) {
+    throw Errors.conflict(
+      'RECEPTIONIST_NOT_CONFIGURED',
+      'Configure a recepcionista no Voice Studio antes de iniciar atendimentos.',
+    );
+  }
+  const persona = await visiblePersona(tx, config.personaId);
+  const business = await buildBusinessFacts(tx, tenantId);
+  const compiled = compileReceptionistInstructions({
+    persona: persona.definition,
+    language: toLanguageSettings(toConfigDto(config)),
+    channel,
+    business,
+    businessInstructions: config.businessInstructions,
+  });
+  return { compiled, personaId: persona.id, personaVersion: config.personaVersion };
 }

@@ -5,6 +5,9 @@ import type {
   AvailabilityResponse,
   ClosureDto,
   ConsentStateDto,
+  ConversationDetailDto,
+  ConversationSummaryDto,
+  ReceptionistStatusDto,
   CustomerDto,
   DashboardSummaryDto,
   OnboardingStatusDto,
@@ -141,5 +144,42 @@ export function useDashboard() {
     queryKey: ['dashboard', tenantId],
     queryFn: () => api<DashboardSummaryDto>(`${base}/dashboard/summary`),
     refetchInterval: 60_000,
+  });
+}
+
+export function useReceptionistStatus() {
+  const { base, tenantId } = useTenant();
+  return useQuery<ReceptionistStatusDto, ApiError>({
+    queryKey: ['receptionist-status', tenantId],
+    queryFn: () => api(`${base}/receptionist/status`),
+  });
+}
+
+export type ConversationFilter = 'active' | 'handoff' | 'closed' | 'simulations';
+
+export function useConversations(filter: ConversationFilter) {
+  const { base, tenantId } = useTenant();
+  const qs =
+    filter === 'simulations'
+      ? 'simulations=true'
+      : filter === 'handoff'
+        ? 'status=HANDOFF'
+        : filter === 'closed'
+          ? 'status=CLOSED'
+          : 'status=OPEN';
+  return useQuery<ConversationSummaryDto[], ApiError>({
+    queryKey: ['conversations', tenantId, filter],
+    queryFn: () => api(`${base}/conversations?${qs}`),
+    refetchInterval: 15_000,
+  });
+}
+
+export function useConversation(id: string | null) {
+  const { base, tenantId } = useTenant();
+  return useQuery<ConversationDetailDto, ApiError>({
+    queryKey: ['conversation', tenantId, id],
+    queryFn: () => api(`${base}/conversations/${id}`),
+    enabled: Boolean(id),
+    refetchInterval: 15_000,
   });
 }

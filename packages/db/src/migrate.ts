@@ -30,6 +30,7 @@ export async function applyGrants(pool: pg.Pool, role: string): Promise<boolean>
     GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO ${role};
     REVOKE UPDATE, DELETE, TRUNCATE ON audit_logs FROM ${role};
     REVOKE INSERT, UPDATE, DELETE, TRUNCATE ON plans FROM ${role};
+    REVOKE UPDATE ON conversation_llm_turns FROM ${role};
     GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO ${role};
     GRANT EXECUTE ON FUNCTION app_current_tenant() TO ${role};
   `);

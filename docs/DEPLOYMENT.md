@@ -52,17 +52,19 @@ docker build -f apps/api/Dockerfile -t barber-voice-api .
 
 Variáveis obrigatórias em produção (a API **recusa iniciar** com configuração insegura):
 
-| Variável         | Exemplo / regra                                                               |
-| ---------------- | ----------------------------------------------------------------------------- |
-| `NODE_ENV`       | `production`                                                                  |
-| `DATABASE_URL`   | papel `barber_app` com senha forte                                            |
-| `WEB_ORIGIN`     | `https://app.barbervoice.com.br` (vírgula para várias)                        |
-| `PUBLIC_WEB_URL` | `https://app.barbervoice.com.br`                                              |
-| `COOKIE_SECURE`  | `true`                                                                        |
-| `ENCRYPTION_KEY` | `openssl rand -base64 32` (guardar no cofre de segredos)                      |
-| `TRUST_PROXY`    | IPs/CIDRs do balanceador ou `true` se a plataforma garantir o cabeçalho       |
-| `REDIS_URL`      | recomendado com mais de uma instância                                         |
-| `MAIL_PROVIDER`  | provedor real (ver INTEGRATIONS.md) — `console` em produção não envia e-mails |
+| Variável                               | Exemplo / regra                                                                                                                                             |
+| -------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `NODE_ENV`                             | `production`                                                                                                                                                |
+| `DATABASE_URL`                         | papel `barber_app` com senha forte                                                                                                                          |
+| `WEB_ORIGIN`                           | `https://app.barbervoice.com.br` (vírgula para várias)                                                                                                      |
+| `PUBLIC_WEB_URL`                       | `https://app.barbervoice.com.br`                                                                                                                            |
+| `COOKIE_SECURE`                        | `true`                                                                                                                                                      |
+| `ENCRYPTION_KEY`                       | `openssl rand -base64 32` (guardar no cofre de segredos)                                                                                                    |
+| `TRUST_PROXY`                          | IPs/CIDRs do balanceador ou `true` se a plataforma garantir o cabeçalho                                                                                     |
+| `REDIS_URL`                            | recomendado com mais de uma instância                                                                                                                       |
+| `MAIL_PROVIDER`                        | provedor real (ver INTEGRATIONS.md) — `console` em produção não envia e-mails                                                                               |
+| `ANTHROPIC_API_KEY`                    | ativa a recepcionista de IA (cofre de segredos; **gera custo por uso** — exige autorização). Sem ela, atendimento por IA e simulador ficam "não integrados" |
+| `ANTHROPIC_MODEL` / `ANTHROPIC_EFFORT` | padrão `claude-opus-5-5` / `medium`; ajustar após medir qualidade, latência e custo                                                                         |
 
 Health checks: **liveness** `GET /health`, **readiness** `GET /ready` (verifica o banco). Encerramento gracioso
 em `SIGTERM`.

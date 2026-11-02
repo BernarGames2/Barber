@@ -29,6 +29,10 @@ const schema = z.object({
   MAIL_PROVIDER: z.enum(['console', 'memory']).default('console'),
   MAIL_FROM: z.string().default('Barber Voice <nao-responda@barbervoice.com.br>'),
   RATE_LIMIT_GLOBAL_PER_MIN: z.coerce.number().int().min(10).default(300),
+  /** Recepcionista de IA (Anthropic). Sem chave, o atendimento por IA fica "não integrado". */
+  ANTHROPIC_API_KEY: z.string().optional(),
+  ANTHROPIC_MODEL: z.string().min(1).default('claude-opus-5-5'),
+  ANTHROPIC_EFFORT: z.enum(['low', 'medium', 'high']).default('medium'),
 });
 
 export type Config = z.infer<typeof schema> & { allowedOrigins: string[] };

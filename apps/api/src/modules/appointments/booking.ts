@@ -622,6 +622,15 @@ export async function updateAppointmentStatus(
       });
     }
     const now = ctx.deps.clock();
+    if (
+      status === 'CONFIRMED' &&
+      a.status === 'HELD' &&
+      a.holdExpiresAt &&
+      a.holdExpiresAt.getTime() <= now.getTime()
+    ) {
+      // reserva vencida: outro cliente pode ter ocupado o horário — nunca confirmar
+      throw Errors.conflict('HOLD_EXPIRED', 'A reserva temporária expirou. Consulte os horários novamente.');
+    }
     if ((status === 'COMPLETED' || status === 'NO_SHOW') && a.startsAt.getTime() > now.getTime()) {
       throw Errors.conflict(
         'APPOINTMENT_NOT_STARTED',

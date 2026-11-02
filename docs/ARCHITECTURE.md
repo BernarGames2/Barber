@@ -112,19 +112,39 @@ Regras: jornada efetiva = jornada do profissional ∩ horário de funcionamento;
 de dias valem para o cliente (o painel pode marcar em cima da hora); horários fora da grade são oferecidos
 quando colados ao término de outro atendimento (menos buracos na agenda).
 
-## Desenho previsto para a recepcionista (Fases 3–4)
+## Recepcionista de IA (Fase 4 — motor implementado)
 
-- **Ferramentas, não memória**: a IA chama ferramentas sobre os serviços existentes — `resolver_data`
-  (resolvedor PT-BR), `listar_servicos`, `consultar_horarios`, `reservar_temporariamente`, `confirmar_reserva`,
-  `cancelar`, `remarcar`, `transferir_para_humano`. Toda informação factual vem dessas respostas.
-- **Verificação antes de falar**: preços, horários e frases de confirmação na resposta são conferidos contra os
-  resultados das ferramentas daquela conversa; "está agendado" só é permitido após `confirmar_reserva` com sucesso.
-- **Instruções em camadas** (Voice Studio): segurança/veracidade > fatos do estabelecimento > personagem >
-  estilo de linguagem > adaptação ao canal (voz sem emojis e com números por extenso via `toSpeechText`).
-- **Voz em tempo real**: provedor SIP/VoIP → WebSocket de mídia → reconhecimento de fala em streaming →
-  modelo com streaming → síntese em frases curtas → áudio de volta, com interrupção ("barge-in"). Latências de
-  cada etapa serão medidas separadamente (meta inicial de ~1 s percebido em condições favoráveis).
-- **Provedores intercambiáveis**: interfaces para LLM, STT, TTS e telefonia, com adaptadores por fornecedor.
+Código: `apps/api/src/modules/receptionist/*` e `packages/core/src/receptionist/*`.
+
+```
+mensagem do cliente ─▶ conversa (instruções congeladas) ─▶ modelo ─┬─▶ ferramenta ─▶ agenda real (RLS, locks,
+                                                                    │                  exclusion constraint)
+                                                                    └─▶ texto ─▶ verificador ─┬─▶ cliente
+                                                                                   (reprovado) └─▶ correção ─▶ modelo
+```
+
+- **Ferramentas, não memória**: `interpretar_data` (resolvedor PT-BR), `consultar_horarios`, `reservar_horario`
+  (HELD 10 min), `confirmar_reserva`, `meus_agendamentos`, `cancelar_agendamento`, `remarcar_agendamento`,
+  `transferir_para_humano`. Usam os mesmos serviços do painel (mesmas proteções contra conflito) com política de
+  cliente (antecedência mínima, limite de dias, só itens "agendáveis pela IA", sem encaixes). Entradas validadas
+  com Zod; o cliente é sempre o do canal (telefone do contato), nunca um dado vindo do modelo.
+- **Confirmação em duas etapas**: `confirmar_reserva` recusa reservas criadas na mesma rodada — o cliente precisa
+  ver o resumo e responder. Reserva vencida → `HOLD_EXPIRED`.
+- **Verificação antes de falar** (`verifyClaims`): preços, horários (com a data da frase) e afirmações de ação são
+  conferidos contra as evidências das ferramentas da conversa; até 2 correções; depois, resposta segura e equipe.
+  Estilo (`checkResponseStyle`) também bloqueia emojis indevidos, termos proibidos/íntimos e informalidade em formal.
+- **Histórico somente-acréscimo**: cada rodada grava em `conversation_llm_turns` exatamente as mensagens enviadas
+  e recebidas (blocos de raciocínio e chamadas de ferramenta intactos). Instruções congeladas no início, "agora"
+  e correções como mensagens `system` no meio da conversa (vêm da plataforma, com autoridade sobre o cliente);
+  respostas reprovadas nunca entram no histórico. Isso mantém o cache de prompt e o raciocínio válidos.
+- **Provedor**: `LlmClient` (interface) + `AnthropicLlmClient` (SDK oficial, `claude-opus-5-5` por padrão,
+  raciocínio adaptativo, `output_config.effort`, `fallbacks: "default"` em recusas, `drop_block` se o histórico
+  divergir, cache automático). Sem `ANTHROPIC_API_KEY`, `deps.llm = null` e tudo que depende de IA responde
+  "não integrado"; mensagens de canais vão para a equipe.
+- **Ordem por conversa**: uma rodada por vez por conversa no processo; `seq` único no banco é a última barreira.
+  Com várias instâncias, a fila por contato (Fase 4b) garante a ordem.
+- **Voz em tempo real (pendente)**: provedor SIP/VoIP → WebSocket de mídia → reconhecimento de fala em streaming →
+  modelo com streaming → síntese em frases curtas (`toSpeechText`) → áudio, com interrupção ("barge-in").
 
 ## Escalabilidade
 

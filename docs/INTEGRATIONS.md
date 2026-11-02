@@ -1,14 +1,15 @@
 # Integrações externas
 
-> Situação: **nenhuma integração externa está ativa**. Antes de implementar cada uma, a documentação
-> oficial atualizada será consultada — endpoints, parâmetros e limites não são presumidos.
-> Contratar qualquer serviço pago exige autorização do proprietário do projeto.
+> Situação: **nenhuma integração externa está ativa**. O adaptador da Anthropic está implementado (SDK oficial)
+> e fica inativo sem `ANTHROPIC_API_KEY` — **nenhuma chamada real foi feita** até agora. Antes de implementar
+> cada integração, a documentação oficial atualizada é consultada — endpoints, parâmetros e limites não são
+> presumidos. Contratar qualquer serviço pago exige autorização do proprietário do projeto.
 
 ## O que o proprietário do projeto precisa contratar/criar
 
 | #   | Serviço                                                        | Para quê                                      | Conta / credenciais necessárias                                                                                                                                                                  | Fase |
 | --- | -------------------------------------------------------------- | --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---- |
-| 1   | **Anthropic (API Claude)**                                     | cérebro da recepcionista e do Copilot         | conta de organização, `ANTHROPIC_API_KEY`, limites de gasto configurados                                                                                                                         | 3–4  |
+| 1   | **Anthropic (API Claude)** — código pronto                     | cérebro da recepcionista e do Copilot         | conta de organização, `ANTHROPIC_API_KEY`, limites de gasto configurados                                                                                                                         | 3–4  |
 | 2   | **Reconhecimento de fala (STT)** em streaming, pt-BR           | entender ligações e áudios do WhatsApp        | conta e chave do provedor escolhido                                                                                                                                                              | 4    |
 | 3   | **Síntese de voz (TTS)** pt-BR                                 | voz da recepcionista; prévias no Voice Studio | conta e chave; licença comercial das vozes                                                                                                                                                       | 3–4  |
 | 4   | **Telefonia SIP/VoIP**                                         | receber ligações, transferir para a equipe    | conta no provedor, números brasileiros (com documentação regulatória), credenciais SIP/API, URL de webhook                                                                                       | 4    |
@@ -20,10 +21,15 @@
 
 ### Notas por integração
 
-**Modelo de linguagem** — a arquitetura prevê interface de provedor; o padrão será a API Claude, com modelo
-rápido para voz (latência) e modelo mais capaz para WhatsApp/Copilot, cache de prompt nas instruções fixas e
-limites de gasto por estabelecimento (franquias dos planos). Toda informação factual virá de ferramentas sobre
-a agenda real.
+**Modelo de linguagem (implementado, inativo)** — `apps/api/src/modules/receptionist/llm.ts`, SDK
+`@anthropic-ai/sdk` 1.3.0, Messages API com ferramentas definidas pela plataforma e laço manual. Configuração no
+servidor: `ANTHROPIC_API_KEY` (obrigatória para ativar; nunca enviada ao painel), `ANTHROPIC_MODEL` (padrão
+`claude-opus-5-5`), `ANTHROPIC_EFFORT` (`low`/`medium`/`high`, padrão `medium`). A requisição usa raciocínio
+adaptativo, `fallbacks: "default"` (beta `server-side-fallback-2026-07-01`: em recusa de segurança a própria API
+tenta o modelo de contingência), `thinking.block_binding.prefix_mismatch_behavior: "drop_block"` (beta
+`thinking-binding-controls-2026-08-01`) e cache automático de prompt. O modelo e o esforço para voz (latência) e
+para WhatsApp devem ser escolhidos **medindo** qualidade, latência e custo com o simulador e os cenários — essa
+medição gera custo e depende de autorização. Limites de gasto por estabelecimento seguirão as franquias dos planos.
 
 **Voz (STT/TTS)** — critérios de escolha: naturalidade em português do Brasil (vozes femininas e masculinas
 **realmente distintas**), latência do primeiro áudio, streaming, estabilidade com áudio telefônico (8 kHz),

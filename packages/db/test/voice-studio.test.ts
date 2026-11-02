@@ -79,14 +79,12 @@ describe('Voice Studio no banco', () => {
   it('configuração da recepcionista é isolada e valida faixas', async () => {
     const rocker = (await admin.db.select().from(personas).where(eq(personas.key, 'rocker')))[0]!;
     await withTenant(app.db, tenantA, (tx) =>
-      tx
-        .insert(receptionistConfigs)
-        .values({
-          tenantId: tenantA,
-          personaId: rocker.id,
-          personaVersion: rocker.version,
-          formality: 'FORMAL',
-        }),
+      tx.insert(receptionistConfigs).values({
+        tenantId: tenantA,
+        personaId: rocker.id,
+        personaVersion: rocker.version,
+        formality: 'FORMAL',
+      }),
     );
     expect(await withTenant(app.db, tenantB, (tx) => tx.select().from(receptionistConfigs))).toHaveLength(0);
     try {

@@ -13,6 +13,7 @@
     "seed:demo": "tsx scripts/seed-demo.ts"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "1.3.0",
     "@barber-voice/contracts": "workspace:*",
     "@barber-voice/core": "workspace:*",
     "@barber-voice/db": "workspace:*",

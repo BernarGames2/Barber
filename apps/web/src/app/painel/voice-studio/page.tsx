@@ -29,6 +29,7 @@ import {
 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
+import { SimulatorCard } from '@/components/receptionist/simulator';
 import { PageHeader } from '@/components/shell/app-shell';
 import { Button } from '@/components/ui/button';
 import { Badge, Card, CardBody, CardHeader, Notice, Skeleton } from '@/components/ui/card';
@@ -778,18 +779,11 @@ export default function VoiceStudioPage() {
               </div>
             </CardBody>
           </Card>
-          <Card>
-            <CardHeader title="4. Simulador" />
-            <CardBody className="flex gap-3">
-              <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-ink-100 text-ink-500">
-                <MessageCircle className="size-5" />
-              </span>
-              <p className="text-[13px] text-ink-500">
-                Conversar com a personagem antes de ativar ficará disponível quando o modelo de IA for
-                configurado (Fase 4) — usando a agenda real em modo simulação, sem gravar reservas.
-              </p>
-            </CardBody>
-          </Card>
+          <SimulatorCard
+            llmConfigured={data.integrations.llm}
+            configSaved={Boolean(data.config)}
+            dirty={Boolean(editable && dirty)}
+          />
         </div>
       </div>
 

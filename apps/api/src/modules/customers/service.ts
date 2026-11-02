@@ -6,6 +6,9 @@ import {
   type Tx,
   appointments,
   consents,
+  conversationLlmTurns,
+  conversationMessages,
+  conversations,
   customers,
   pgConstraintName,
   pgErrorCode,
@@ -297,6 +300,28 @@ export async function anonymizeCustomer(ctx: ServiceContext, customerId: string)
       })
       .where(eq(customers.id, customerId));
     await tx.update(appointments).set({ notes: null }).where(eq(appointments.customerId, customerId));
+    // conversas do cliente: remove conteúdo e o histórico enviado ao modelo (mantém só os metadados)
+    const convs = await tx
+      .select({ id: conversations.id })
+      .from(conversations)
+      .where(
+        or(
+          eq(conversations.customerId, customerId),
+          c.phone ? eq(conversations.contactPhone, c.phone) : undefined,
+        ),
+      );
+    const convIds = convs.map((x) => x.id);
+    if (convIds.length) {
+      await tx
+        .update(conversations)
+        .set({ contactPhone: null, contactName: null, customerId })
+        .where(inArray(conversations.id, convIds));
+      await tx
+        .update(conversationMessages)
+        .set({ content: '[conteúdo removido — LGPD]', toolInput: null, toolOutput: null, verification: null })
+        .where(inArray(conversationMessages.conversationId, convIds));
+      await tx.delete(conversationLlmTurns).where(inArray(conversationLlmTurns.conversationId, convIds));
+    }
     await audit(tx, {
       tenantId: ctx.tenant.id,
       actorUserId: ctx.actor.userId,

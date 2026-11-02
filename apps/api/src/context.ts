@@ -2,6 +2,7 @@ import type { MemberRole } from '@barber-voice/contracts';
 import type { Database } from '@barber-voice/db';
 import type { Config } from './config';
 import type { Mailer } from './lib/mailer';
+import type { LlmClient } from './modules/receptionist/llm';
 
 export interface AppDeps {
   config: Config;
@@ -10,6 +11,8 @@ export interface AppDeps {
   mailer: Mailer;
   /** Relógio injetável (testes controlam "agora"). */
   clock: () => Date;
+  /** Modelo de linguagem da recepcionista; `null` = integração não configurada. */
+  llm: LlmClient | null;
 }
 
 export interface AuthContext {

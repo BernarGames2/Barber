@@ -1,8 +1,10 @@
 # Voice Studio — sistema de personagens
 
-> Situação (02/11/2026): **núcleo implementado e testado** — biblioteca, configuração de linguagem independente,
-> compilador de instruções, validador de estilo, personagens próprias e tela no painel. **Pendentes**: vozes reais
-> e prévia de voz (provedor de TTS) e simulador (modelo de IA). Nenhuma dessas partes é simulada.
+> Situação (02/11/2026): **núcleo e simulador implementados e testados** — biblioteca, configuração de linguagem
+> independente, compilador de instruções, validador de estilo, personagens próprias, tela no painel e simulador
+> (agenda real, sem gravações; testado com modelo roteirizado). O simulador só funciona com o modelo de IA
+> integrado (`ANTHROPIC_API_KEY`). **Pendentes**: vozes reais e prévia de voz (provedor de TTS). Nada é simulado
+> com respostas prontas.
 >
 > Código: `packages/core/src/persona/*`, `packages/db/src/schema/voice-studio.ts` (migrações 0002–0003),
 > `apps/api/src/modules/voice-studio/*`, `apps/web/src/app/painel/voice-studio/page.tsx`.

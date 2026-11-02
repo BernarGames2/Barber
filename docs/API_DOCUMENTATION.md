@@ -167,6 +167,24 @@ Idempotency-Key: 6f1c…   (recomendado — repetir a mesma chave devolve a mesm
 | POST   | `…/voice-studio/preview`  | gerente+  | mesma estrutura + `channel: "PHONE"\|"WHATSAPP"` → seções das instruções compiladas com os dados reais, `hash` e ajustes (nada é salvo)                                                                                                                                                                                                                |
 | POST   | `…/voice-studio/personas` | gerente+  | personagem própria a partir de uma da biblioteca: `{ basePersonaId, name, tagline, personality, speakingStyle, signaturePhrases[], presentation }` (requer plano com personagens próprias)                                                                                                                                                             |
 
+## Recepcionista e conversas
+
+Conversas contêm dados de clientes: leitura com a permissão do CRM (`customers:read`, inclusive equipe),
+ações com `customers:write`; o simulador exige `ai:configure` (proprietário/gerente).
+
+| Método | Rota                                                                   | Descrição                                                                                                                                                                                                                                  |
+| ------ | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| GET    | `…/receptionist/status`                                                | `{ llm: { configured, provider, model }, receptionistConfigured }` — o painel mostra "não integrado" quando `configured` é falso                                                                                                           |
+| GET    | `…/conversations?status=OPEN\|HANDOFF\|CLOSED&simulations=true\|false` | até 100 conversas mais recentes (resumo, contato, cliente vinculado, última mensagem)                                                                                                                                                      |
+| GET    | `…/conversations/:id`                                                  | conversa com a linha do tempo: mensagens do cliente/recepcionista/equipe, ações das ferramentas (`toolName`, `toolError`) e marcações do verificador (`verification.rejected`, `fallback`)                                                 |
+| POST   | `…/conversations/:id/take-over`                                        | a equipe assume (a recepcionista para de responder)                                                                                                                                                                                        |
+| POST   | `…/conversations/:id/return-to-ai`                                     | devolve à recepcionista (`503 AI_NOT_CONFIGURED` sem provedor)                                                                                                                                                                             |
+| POST   | `…/conversations/:id/close`                                            | encerra                                                                                                                                                                                                                                    |
+| POST   | `…/simulator/conversations`                                            | `{ channel: "WHATSAPP"\|"PHONE", contactPhone?, contactName? }` → conversa de simulação com as instruções da configuração **salva** (congeladas). `503 AI_NOT_CONFIGURED` sem provedor; `409 RECEPTIONIST_NOT_CONFIGURED` sem configuração |
+| POST   | `…/simulator/conversations/:id/messages`                               | `{ text }` → `{ reply, speech, status, handoffReason, conversation }`. Agenda real consultada; reservas/cancelamentos/remarcações **não gravados**. Conversas reais recusam (`403`): mensagens de clientes só chegam pelos canais          |
+
+Cada mensagem do simulador chama o modelo de IA (custo de uso). `speech` é a versão para fala (ligações).
+
 ## Dashboard
 
 `GET …/dashboard/summary[?date=AAAA-MM-DD]` — indicadores reais (ver `DashboardSummaryDto` em
@@ -174,12 +192,13 @@ Idempotency-Key: 6f1c…   (recomendado — repetir a mesma chave devolve a mesm
 
 ## Códigos de erro frequentes
 
-| HTTP | code                                                                             | Quando                                                 |
-| ---- | -------------------------------------------------------------------------------- | ------------------------------------------------------ |
-| 400  | `VALIDATION_ERROR`                                                               | dados inválidos (com `details`)                        |
-| 401  | `UNAUTHORIZED`, `INVALID_CREDENTIALS`                                            | sem sessão / login inválido                            |
-| 403  | `FORBIDDEN`, `CSRF_REJECTED`, `TENANT_SUSPENDED`                                 | sem permissão / origem não autorizada / conta suspensa |
-| 404  | `NOT_FOUND`                                                                      | inexistente **ou** de outro estabelecimento            |
-| 409  | `SLOT_UNAVAILABLE`, `EMAIL_IN_USE`, `INVALID_STATUS_TRANSITION`, …               | conflitos de estado                                    |
-| 422  | `SERVICE_UNAVAILABLE`, `PROFESSIONAL_CANNOT_PERFORM`, `ONBOARDING_INCOMPLETE`, … | regra de negócio                                       |
-| 429  | `RATE_LIMITED`, `ACCOUNT_LOCKED`                                                 | limites                                                |
+| HTTP | code                                                                                                                                     | Quando                                                 |
+| ---- | ---------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
+| 400  | `VALIDATION_ERROR`                                                                                                                       | dados inválidos (com `details`)                        |
+| 401  | `UNAUTHORIZED`, `INVALID_CREDENTIALS`                                                                                                    | sem sessão / login inválido                            |
+| 403  | `FORBIDDEN`, `CSRF_REJECTED`, `TENANT_SUSPENDED`                                                                                         | sem permissão / origem não autorizada / conta suspensa |
+| 404  | `NOT_FOUND`                                                                                                                              | inexistente **ou** de outro estabelecimento            |
+| 409  | `SLOT_UNAVAILABLE`, `EMAIL_IN_USE`, `INVALID_STATUS_TRANSITION`, `HOLD_EXPIRED`, `RECEPTIONIST_NOT_CONFIGURED`, `CONVERSATION_CLOSED`, … | conflitos de estado                                    |
+| 422  | `SERVICE_UNAVAILABLE`, `PROFESSIONAL_CANNOT_PERFORM`, `ONBOARDING_INCOMPLETE`, …                                                         | regra de negócio                                       |
+| 429  | `RATE_LIMITED`, `ACCOUNT_LOCKED`                                                                                                         | limites                                                |
+| 503  | `AI_NOT_CONFIGURED`                                                                                                                      | recepcionista de IA sem provedor configurado           |

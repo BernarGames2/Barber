@@ -7,3 +7,4 @@ export * from './scheduling';
 export * from './billing';
 export * from './audit';
 export * from './voice-studio';
+export * from './conversations';

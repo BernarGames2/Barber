@@ -30,11 +30,13 @@ export async function createTestContext(start: Date = MONDAY_10AM): Promise<Test
     WEB_ORIGIN: ORIGIN,
     PUBLIC_WEB_URL: ORIGIN,
     RATE_LIMIT_GLOBAL_PER_MIN: '100000',
+    // nunca chama um provedor real nos testes
+    ANTHROPIC_API_KEY: '',
   });
   const mailer = new MemoryMailer();
   let current = start.getTime();
   const app = await buildApp(
-    { config, db: handle.db, mailer, clock: () => new Date(current) },
+    { config, db: handle.db, mailer, clock: () => new Date(current), llm: null },
     { logger: false },
   );
   await app.ready();

@@ -4,8 +4,9 @@ Plataforma SaaS de **recepcionistas de inteligência artificial** para barbearia
 atendimento por telefone e WhatsApp com a personalidade do estabelecimento, agenda inteligente sem
 conflitos, CRM e inteligência comercial.
 
-> Situação atual: Fases 1 (fundação) e 2 (operação) concluídas e testadas; Fase 3 (Voice Studio) com núcleo pronto — agenda, CRM, onboarding, personagens e
-> painel funcionam de ponta a ponta. O motor da recepcionista de IA, a telefonia e o WhatsApp chegam na Fase 4.
+> Situação atual: Fases 1 e 2 concluídas; Voice Studio (Fase 3) com núcleo e simulador; Fase 4 com o motor da
+> recepcionista (ferramentas sobre a agenda real, verificador de afirmações, conversas) pronto e testado com modelo
+> roteirizado. Ainda **sem** chamada real ao modelo de IA (exige chave) e sem WhatsApp/telefonia conectados.
 > Detalhes em [PROJECT_STATUS.md](PROJECT_STATUS.md).
 
 ## Princípios
@@ -18,14 +19,15 @@ conflitos, CRM e inteligência comercial.
 
 ## Stack
 
-| Camada   | Tecnologia                                                                                 |
-| -------- | ------------------------------------------------------------------------------------------ |
-| Painel   | Next.js 16 (App Router), React 19, Tailwind CSS 4, TanStack Query, Radix UI                |
-| API      | Node.js 22, Fastify 5, Zod 4, sessões opacas + Argon2id                                    |
-| Dados    | PostgreSQL 16 (RLS, btree_gist, pg_trgm), Drizzle ORM, Redis (rate limit; filas na Fase 4) |
-| Domínio  | `packages/core` — motor de agenda, datas em PT-BR, fala, telefone (TypeScript puro)        |
-| Testes   | Vitest com PostgreSQL real, Playwright (E2E)                                               |
-| Monorepo | pnpm workspaces + Turborepo                                                                |
+| Camada   | Tecnologia                                                                                      |
+| -------- | ----------------------------------------------------------------------------------------------- |
+| Painel   | Next.js 16 (App Router), React 19, Tailwind CSS 4, TanStack Query, Radix UI                     |
+| API      | Node.js 22, Fastify 5, Zod 4, sessões opacas + Argon2id                                         |
+| Dados    | PostgreSQL 16 (RLS, btree_gist, pg_trgm), Drizzle ORM, Redis (rate limit; filas na Fase 4)      |
+| Domínio  | `packages/core` — motor de agenda, datas em PT-BR, fala, personagens, verificador de afirmações |
+| IA       | SDK oficial da Anthropic (inativo sem `ANTHROPIC_API_KEY`), ferramentas próprias sobre a agenda |
+| Testes   | Vitest com PostgreSQL real, Playwright (E2E)                                                    |
+| Monorepo | pnpm workspaces + Turborepo                                                                     |
 
 ## Estrutura
 

@@ -248,6 +248,28 @@ try {
     await shot(page, '19-voice-studio');
   });
 
+  await step('simulador e conversas mostram o estado real (sem IA integrada, nada é simulado)', async () => {
+    await page.getByText('Modelo de linguagem não integrado').waitFor();
+    await page.goto(`${BASE}/painel/conversas`);
+    await page.getByRole('heading', { name: 'Conversas' }).waitFor();
+    await page.getByText('Canais ainda não conectados').waitFor();
+    await page.getByRole('tab', { name: 'Simulações' }).click();
+    await page.getByText('Teste a recepcionista no simulador do Voice Studio.').waitFor();
+    const res = await page.evaluate(async () => {
+      const me = await (await fetch('/api/v1/auth/me')).json();
+      const tenantId = me.memberships[0].tenantId;
+      return (
+        await fetch(`/api/v1/tenants/${tenantId}/simulator/conversations`, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ channel: 'WHATSAPP' }),
+        })
+      ).status;
+    });
+    if (res !== 503) throw new Error(`simulador sem IA deveria responder 503, respondeu ${res}`);
+    await shot(page, '20-conversas');
+  });
+
   await step('logout encerra a sessão', async () => {
     await page.goto(`${BASE}/painel`);
     await page.getByRole('button', { name: 'Sair' }).click();

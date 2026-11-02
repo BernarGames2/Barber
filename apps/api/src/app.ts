@@ -5,6 +5,7 @@ import Fastify, { type FastifyServerOptions } from 'fastify';
 import type { AppDeps } from './context';
 import { errorHandler } from './lib/errors';
 import { ConsoleMailer, type Mailer } from './lib/mailer';
+import { type LlmClient, createLlmClient } from './modules/receptionist/llm';
 import { appointmentRoutes } from './modules/appointments/routes';
 import { authRoutes } from './modules/auth/routes';
 import { createAuthService } from './modules/auth/service';
@@ -13,6 +14,7 @@ import { customerRoutes } from './modules/customers/routes';
 import { dashboardRoutes } from './modules/dashboard/routes';
 import { systemRoutes } from './modules/system/routes';
 import { tenantCreationRoutes, tenantRoutes } from './modules/tenants/routes';
+import { receptionistRoutes } from './modules/receptionist/routes';
 import { voiceStudioRoutes } from './modules/voice-studio/routes';
 import { authPlugin } from './plugins/auth';
 import { securityPlugin } from './plugins/security';
@@ -36,7 +38,7 @@ function parseTrustProxy(value: string): boolean | string[] {
 }
 
 export async function buildApp(
-  deps: Omit<AppDeps, 'mailer'> & { mailer?: Mailer },
+  deps: Omit<AppDeps, 'mailer' | 'llm'> & { mailer?: Mailer; llm?: LlmClient | null },
   options: BuildOptions = {},
 ) {
   const app = Fastify({
@@ -63,6 +65,7 @@ export async function buildApp(
   const fullDeps: AppDeps = {
     ...deps,
     mailer: deps.mailer ?? new ConsoleMailer(app.log, deps.config.NODE_ENV === 'production'),
+    llm: deps.llm === undefined ? createLlmClient(deps.config) : deps.llm,
   };
   app.decorate('deps', fullDeps);
   app.setErrorHandler(errorHandler);
@@ -100,6 +103,7 @@ export async function buildApp(
       appointmentRoutes(scoped);
       dashboardRoutes(scoped);
       voiceStudioRoutes(scoped);
+      receptionistRoutes(scoped);
     },
     { prefix: '/v1/tenants/:tenantId' },
   );

@@ -47,10 +47,18 @@ Ver números em [PROJECT_STATUS.md](../PROJECT_STATUS.md#testes-executados-02112
 - **Isolamento**: dono de B não lê nem altera nada de A (inclusive usando IDs de A dentro do escopo de B).
 - **Linguagem**: ~110 expressões temporais em português, incluindo ambiguidades ("às 8", "terça que vem" na
   véspera), ruído ("boa tarde" não é período) e quantidades ("2 pessoas" não é horário).
+- **Verificador de afirmações**: 40 casos — preços por extenso e somas do catálogo, horário certo na data errada,
+  listas do WhatsApp que herdam a data, durações que não são horários, perguntas/negações/condicionais.
+- **Recepcionista com modelo roteirizado** (`apps/api/test/receptionist.test.ts`): um dublê de teste devolve
+  chamadas de ferramenta predefinidas e as ferramentas rodam contra o banco real — agendamento ponta a ponta,
+  confirmação só após o "sim", histórico somente-acréscimo (prefixo idêntico entre rodadas e raciocínio
+  preservado), correção de preço inventado, transferência após 3 reprovações, provedor indisponível/recusa,
+  acesso apenas aos próprios agendamentos, simulador sem gravações e anonimização das conversas.
+  **Nenhum teste chama o provedor real** (`ANTHROPIC_API_KEY` é forçada a vazio).
 
 ## Plano para a recepcionista (Fases 4 e 7) — 200+ cenários
 
-Os cenários conversacionais serão executados por um _harness_ determinístico contra o motor real da recepcionista,
+O motor e o dublê roteirizado já existem; o _harness_ reutiliza os dois. Os cenários serão executados contra o motor real da recepcionista,
 com estabelecimento e agenda semeados e relógio fixo. Cada cenário define: mensagens/áudio do cliente, estado da
 agenda, e **asserções verificáveis** (não "parece bom"):
 

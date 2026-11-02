@@ -36,7 +36,7 @@ const TZ = 'America/Sao_Paulo';
 
 const app = createDb(config.DATABASE_URL, { max: 4 });
 const admin = createDb(adminUrl, { max: 1 });
-const deps: AppDeps = { config, db: app.db, mailer: new MemoryMailer(), clock: () => new Date() };
+const deps: AppDeps = { config, db: app.db, mailer: new MemoryMailer(), clock: () => new Date(), llm: null };
 
 try {
   const existing = await admin.db.select().from(users).where(eq(users.email, DEMO_EMAIL)).limit(1);

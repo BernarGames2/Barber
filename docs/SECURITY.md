@@ -52,6 +52,17 @@ estabelecimento dentro do próprio escopo.
 | Anonimizar cliente (LGPD)                            |      ✅      |   ✅    |   —    |
 | Equipe e cobrança                                    |      ✅      |    —    |   —    |
 
+### Recepcionista de IA
+
+- Chave do provedor somente no servidor (`ANTHROPIC_API_KEY`); testes forçam a chave vazia.
+- O modelo só age por ferramentas validadas (Zod) que usam os mesmos serviços do painel, sob RLS, com política
+  de cliente; nunca encaixes nem exceções de horário. Cancelar/remarcar só os agendamentos do cliente do canal
+  (identificado pelo telefone do contato, nunca por dado vindo do modelo) e dentro do prazo do estabelecimento.
+- Confirmação exige resposta do cliente após o resumo; verificador bloqueia preço/horário/ação não comprovados.
+- Mensagens do cliente são dados: as regras invioláveis vêm primeiro nas instruções, e só mensagens `system`
+  inseridas pela plataforma (data atual, correções) têm autoridade.
+- Histórico enviado ao modelo é somente-acréscimo (UPDATE revogado do papel da aplicação + gatilho no banco).
+
 ## LGPD
 
 | Tema                | Como é tratado                                                                                                                                                                            |
@@ -59,7 +70,7 @@ estabelecimento dentro do próprio escopo.
 | Papéis              | Estabelecimento = controlador dos dados dos seus clientes; Barber Voice = operador                                                                                                        |
 | Minimização         | Cadastro do cliente exige apenas nome; telefone/e-mail opcionais                                                                                                                          |
 | Consentimento       | Registro por finalidade (WhatsApp transacional, marketing, gravação de ligação, tratamento de dados), somente-inserção, com data, canal e evidência; estado atual = registro mais recente |
-| Direitos do titular | Acesso/correção pela ficha; **anonimização** irreversível que preserva métricas agregadas                                                                                                 |
+| Direitos do titular | Acesso/correção pela ficha; **anonimização** irreversível que preserva métricas agregadas — inclui apagar o conteúdo das conversas do cliente e o histórico enviado ao modelo             |
 | Observações         | Campos de observação marcados como "autorizadas"; não são lidos ao cliente pela IA                                                                                                        |
 | Transparência       | Política de privacidade preliminar publicada; aviso de gravação será obrigatório quando houver gravação de chamadas (Fase 4)                                                              |
 | Comunicação ativa   | Campanhas e recuperação de clientes só com consentimento de marketing e dentro das regras da Meta (Fase 5)                                                                                |

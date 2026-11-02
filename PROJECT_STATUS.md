@@ -5,19 +5,20 @@
 
 ## Resumo
 
-| Fase              | Escopo                                                                    | Situação                                                                              |
-| ----------------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| **1 — Fundação**  | Arquitetura, banco, autenticação, multi-tenancy, design system, estrutura | ✅ Concluída                                                                          |
-| **2 — Operação**  | Cadastro/onboarding, serviços, profissionais, agenda, clientes            | ✅ Concluída (com pendências menores listadas abaixo)                                 |
-| 3 — Voice Studio  | Personagens, vozes, linguagem, simulador                                  | 🟡 Em andamento — núcleo pronto (ver abaixo); voz e simulador dependem de integrações |
-| 4 — Atendimento   | Motor de IA, telefonia, WhatsApp, transferência, central de conversas     | ⏳ Não iniciada                                                                       |
-| 5 — Inteligência  | CRM avançado, Copilot, inteligência comercial, recuperação                | ⏳ Não iniciada (dashboard básico real já existe)                                     |
-| 6 — Administração | Superadmin, planos, pagamentos, custos                                    | ⏳ Estrutura de planos/assinatura no banco; sem telas/pagamentos                      |
-| 7 — Qualidade     | 200 cenários conversacionais, segurança, performance, piloto              | ⏳ Base de testes criada; cenários de IA dependem da Fase 4                           |
+| Fase              | Escopo                                                                    | Situação                                                                          |
+| ----------------- | ------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| **1 — Fundação**  | Arquitetura, banco, autenticação, multi-tenancy, design system, estrutura | ✅ Concluída                                                                      |
+| **2 — Operação**  | Cadastro/onboarding, serviços, profissionais, agenda, clientes            | ✅ Concluída (com pendências menores listadas abaixo)                             |
+| 3 — Voice Studio  | Personagens, vozes, linguagem, simulador                                  | 🟡 Núcleo e simulador prontos; vozes dependem de provedor de TTS                  |
+| 4 — Atendimento   | Motor de IA, telefonia, WhatsApp, transferência, central de conversas     | 🟡 Motor, ferramentas, verificador e conversas prontos; canais dependem de contas |
+| 5 — Inteligência  | CRM avançado, Copilot, inteligência comercial, recuperação                | ⏳ Não iniciada (dashboard básico real já existe)                                 |
+| 6 — Administração | Superadmin, planos, pagamentos, custos                                    | ⏳ Estrutura de planos/assinatura no banco; sem telas/pagamentos                  |
+| 7 — Qualidade     | 200 cenários conversacionais, segurança, performance, piloto              | ⏳ Base de testes criada; cenários de IA dependem da Fase 4                       |
 
-**O produto ainda NÃO está pronto para piloto**: a recepcionista de IA, a telefonia e o WhatsApp
-(critérios centrais de aprovação) dependem das Fases 3 e 4. A agenda, o CRM e o painel já
-funcionam de ponta a ponta e podem ser usados manualmente.
+**O produto ainda NÃO está pronto para piloto**: o motor da recepcionista está pronto e testado, mas
+**nunca conversou com um modelo de IA real** (não há `ANTHROPIC_API_KEY` neste ambiente) e os canais
+WhatsApp/telefone ainda não estão conectados — ambos exigem contas e autorização de custos. A agenda, o CRM,
+o Voice Studio e o painel funcionam de ponta a ponta e podem ser usados manualmente.
 
 ---
 
@@ -83,22 +84,51 @@ funcionam de ponta a ponta e podem ser usados manualmente.
   personagem → linguagem → canal → orientações livres), com prévia transparente no painel.
 - Validador de estilo das respostas (emojis, dígitos/markdown na voz, tamanho, intimidade, gírias em linguagem formal).
 - Personagens próprias (plano com o recurso) e personalização avançada controlada pelo plano no servidor.
-- Pendente: catálogo e prévia de vozes (requer provedor de TTS) e simulador (requer modelo de IA).
+- Simulador: conversa com a recepcionista usando a configuração salva e a agenda real em modo simulação
+  (reservas, cancelamentos e remarcações são validados e **não gravados**); mostra as ferramentas usadas, as
+  correções do verificador e, para ligações, como a resposta seria falada. Só funciona com o modelo de IA integrado.
+- Pendente: catálogo e prévia de vozes (requer provedor de TTS).
+
+### Atendimento (Fase 4 — motor pronto; canais pendentes)
+
+- **Ferramentas sobre a agenda real**: interpretar data (resolvedor PT-BR), consultar horários, reservar
+  temporariamente (10 min), confirmar, listar/cancelar/remarcar os agendamentos **do próprio cliente** e transferir
+  para a equipe. Entradas validadas (Zod) antes de qualquer acesso ao banco; nomes de serviços/profissionais
+  precisam casar com o cadastro; telefone do cliente vem do canal, nunca do modelo.
+- **Confirmação em duas etapas**: a ferramenta recusa confirmar na mesma rodada da reserva — o cliente precisa
+  ver o resumo e responder. Reserva temporária vencida nunca é confirmada (`HOLD_EXPIRED`).
+- **Verificador de afirmações** (determinístico, antes de qualquer envio): preços (catálogo, valores devolvidos
+  por ferramentas ou somas de até 3 serviços), horários (precisam ter vindo da agenda — e, se a frase cita data, o
+  par data+horário precisa conferir), e "agendado/reservado/cancelado/remarcado" só depois do sucesso da
+  ferramenta. Entende números e horários por extenso ("quarenta e cinco reais", "às duas da tarde"). Reprovação
+  → nova tentativa com a correção; 3 reprovações → resposta segura e transferência para a equipe.
+- **Motor de conversa**: instruções congeladas por conversa, histórico **somente-acréscimo** gravado exatamente
+  como enviado ao modelo (preserva raciocínio e cache), "agora" e correções como mensagens de sistema da
+  plataforma; recusa/indisponibilidade do provedor → resposta segura + equipe.
+- **Adaptador Anthropic** (SDK oficial 1.3.0, `claude-opus-5-5`, esforço configurável, fallback do servidor em
+  recusas, cache de prompt). Ativado somente com `ANTHROPIC_API_KEY` no servidor. **Não testado com o provedor
+  real** (sem chave); validado por typecheck contra os tipos do SDK.
+- **Central de conversas** no painel: filtros (recepcionista, equipe, encerradas, simulações), linha do tempo
+  com ações das ferramentas e marcações do verificador; assumir, devolver à recepcionista e encerrar.
+- Sem IA integrada, mensagens de canais **não se perdem**: a conversa nasce/passa para a equipe.
+- LGPD: anonimizar o cliente apaga o conteúdo das conversas dele e o histórico enviado ao modelo.
+- Pendente: WhatsApp Business Platform (webhook assinado, envio, janela de 24 h/templates), telefonia e voz em
+  tempo real, resposta da equipe pelo painel, fila por contato para múltiplas instâncias.
 
 ---
 
 ## Testes executados (02/11/2026)
 
-| Suíte                                        | O que cobre                                                                                                                                                                                                                                                                                                                                                                      | Resultado           |
-| -------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------- |
-| `packages/core`                              | motor de agenda, fuzz de 300 cenários aleatórios (equivalência com validação individual), DST, desempenho (7 dias × 10 profissionais < 50 ms), ~110 expressões temporais PT-BR, fala, telefone, dinheiro, UUID; Voice Studio: biblioteca, independência personagem×linguagem, compilador (66 combinações), validador de estilo                                                   | **172/172 ✅**      |
-| `packages/db`                                | RLS (leitura, escrita, UPDATE/DELETE cruzados, vazamento de contexto entre transações), FKs compostas, exclusion constraint, **20 inserções concorrentes → 1 aceita**, permissões do papel da aplicação; RLS de personagens (biblioteca somente leitura) e configuração da recepcionista                                                                                         | **18/18 ✅**        |
-| `packages/contracts`                         | validações compartilhadas painel↔API                                                                                                                                                                                                                                                                                                                                             | **7/7 ✅**          |
-| `apps/api`                                   | autenticação e proteções HTTP, isolamento entre estabelecimentos via API, papéis, onboarding, catálogo, CRM/LGPD, disponibilidade, reservas, **15 reservas HTTP simultâneas → 1 confirmada**, "qualquer profissional" concorrente, idempotência (inclusive concorrente), remarcação atômica, HELD expirado, dashboard, Voice Studio (planos, isolamento, prévia com dados reais) | **78/78 ✅**        |
-| E2E (`e2e/smoke.mjs`, Chromium real)         | cadastro → onboarding → agendamento com horário real → recusa do mesmo horário → CRM → dashboard → mobile → Voice Studio → logout                                                                                                                                                                                                                                                | **16/16 etapas ✅** |
-| Typecheck (5 pacotes) e build (API + painel) | —                                                                                                                                                                                                                                                                                                                                                                                | **✅**              |
+| Suíte                                        | O que cobre                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              | Resultado           |
+| -------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------- |
+| `packages/core`                              | motor de agenda, fuzz de 300 cenários aleatórios, DST, desempenho, ~110 expressões temporais PT-BR, fala, telefone, dinheiro, UUID; Voice Studio (biblioteca, independência personagem×linguagem, compilador com 66 combinações, validador de estilo); **verificador de afirmações** (40 casos: números por extenso, horários ambíguos, durações, data+horário, listas do WhatsApp, negações e condicionais)                                                                                                                                                                                             | **212/212 ✅**      |
+| `packages/db`                                | RLS, FKs compostas, exclusion constraint, **20 inserções concorrentes → 1 aceita**, permissões do papel; personagens e configuração; **conversas isoladas**, histórico do modelo somente-acréscimo (nem o papel dono edita), sequência única                                                                                                                                                                                                                                                                                                                                                             | **21/21 ✅**        |
+| `packages/contracts`                         | validações compartilhadas painel↔API                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | **7/7 ✅**          |
+| `apps/api`                                   | autenticação, isolamento, papéis, onboarding, catálogo, CRM/LGPD, disponibilidade, reservas concorrentes, idempotência, remarcação atômica, dashboard, Voice Studio; **recepcionista com modelo roteirizado**: agendamento ponta a ponta no banco, confirmação só após o "sim", histórico somente-acréscimo com raciocínio preservado, preço inventado bloqueado e corrigido, 3 reprovações → equipe, indisponibilidade/recusa → resposta segura, acesso só aos próprios agendamentos, remarcação e cancelamento reais, reserva vencida, simulador sem gravações, isolamento, anonimização das conversas | **94/94 ✅**        |
+| E2E (`e2e/smoke.mjs`, Chromium real)         | cadastro → onboarding → agendamento com horário real → recusa do mesmo horário → CRM → dashboard → mobile → Voice Studio → simulador/conversas sem IA (estado honesto, 503) → logout — contra o **build de produção**                                                                                                                                                                                                                                                                                                                                                                                    | **17/17 etapas ✅** |
+| Typecheck (5 pacotes) e build (API + painel) | —                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        | **✅**              |
 
-**Total: 275 testes automatizados + 16 etapas E2E, todos aprovados.**
+**Total: 334 testes automatizados + 17 etapas E2E, todos aprovados.**
 
 ### Problemas encontrados pelos testes e corrigidos
 
@@ -112,17 +142,27 @@ funcionam de ponta a ponta e podem ser usados manualmente.
 6. `toSpeechText` removia o ponto final após "min."; bundle da API não encontrava dependência transitiva.
 7. Seed da biblioteca de personagens não era idempotente: o `jsonb` reordena chaves e toda execução incrementaria
    a versão das 11 personagens. Corrigido com comparação canônica (chaves ordenadas).
+8. Instalar o SDK da Anthropic trouxe `@opentelemetry/api` (peer opcional do Drizzle) só para a API e o pnpm
+   criou uma segunda cópia do `drizzle-orm`, com tipos incompatíveis entre API e banco. Corrigido declarando a
+   mesma versão no `packages/db` (uma única instância).
+9. Revisão do fluxo de reserva da IA: uma reserva temporária já vencida, mas ainda não marcada como expirada pela
+   limpeza, podia ser confirmada. Agora a confirmação verifica o vencimento (`HOLD_EXPIRED`) — coberto por teste.
 
 ### Ainda não testado
 
+- **Chamada real ao modelo de IA**: nenhuma requisição foi feita à Anthropic (sem chave e sem autorização de
+  custos). O comportamento conversacional real (qualidade, uso correto das ferramentas, taxa de reprovação do
+  verificador, latência e custo por conversa) **precisa ser medido** com chave e com o harness de cenários.
 - Imagem Docker da API (`apps/api/Dockerfile`): **não foi construída neste ambiente** (sem daemon Docker).
+- Várias instâncias da API atendendo a mesma conversa (a ordem por conversa é garantida por processo; a fila por
+  contato chega com os canais).
 - Rate limit com Redis (testado apenas em memória).
 - Navegadores além do Chromium; leitores de tela (atributos ARIA aplicados, sem auditoria formal).
 - Carga/performance da API sob muitos estabelecimentos simultâneos.
 
 ---
 
-## Pendências conhecidas (Fases 1–2)
+## Pendências conhecidas
 
 - Convites de equipe por e-mail (tabela `invitations` existe; faltam endpoints/telas).
 - Lista de espera: tabela `waitlist_entries` pronta; endpoints, telas e oferta automática pendentes (Fase 5).
@@ -135,14 +175,14 @@ funcionam de ponta a ponta e podem ser usados manualmente.
 
 ## Integrações que precisam de credenciais (nenhuma ativa)
 
-| Integração                                       | Uso                               | Credenciais                                          |
-| ------------------------------------------------ | --------------------------------- | ---------------------------------------------------- |
-| Modelo de linguagem (Anthropic Claude)           | recepcionista, Copilot            | `ANTHROPIC_API_KEY`                                  |
-| Voz — STT e TTS (provedor a definir na Fase 3/4) | ligações, áudios, prévia de vozes | chave do provedor                                    |
-| Telefonia SIP/VoIP (provedor a definir)          | ligações                          | conta, número, credenciais SIP/API                   |
-| WhatsApp Business Platform (Meta, Cloud API)     | mensagens                         | app Meta, WABA, número verificado, token, app secret |
-| Pagamentos (Mercado Pago ou Stripe)              | assinaturas                       | access token / chaves + webhook secret               |
-| E-mail transacional                              | senha, confirmação                | chave do provedor                                    |
+| Integração                                             | Uso                               | Credenciais                                                   |
+| ------------------------------------------------------ | --------------------------------- | ------------------------------------------------------------- |
+| Modelo de linguagem (Anthropic Claude) — código pronto | recepcionista, simulador, Copilot | `ANTHROPIC_API_KEY` (+ `ANTHROPIC_MODEL`, `ANTHROPIC_EFFORT`) |
+| Voz — STT e TTS (provedor a definir na Fase 3/4)       | ligações, áudios, prévia de vozes | chave do provedor                                             |
+| Telefonia SIP/VoIP (provedor a definir)                | ligações                          | conta, número, credenciais SIP/API                            |
+| WhatsApp Business Platform (Meta, Cloud API)           | mensagens                         | app Meta, WABA, número verificado, token, app secret          |
+| Pagamentos (Mercado Pago ou Stripe)                    | assinaturas                       | access token / chaves + webhook secret                        |
+| E-mail transacional                                    | senha, confirmação                | chave do provedor                                             |
 
 ## Custos externos previstos
 
@@ -153,12 +193,15 @@ franquias dos planos (`packages/db/src/seed-plans.ts`) foram definidas de forma 
 
 ## Próximas etapas
 
-1. **Concluir a Fase 3**: provedor de TTS (catálogo de vozes reais e prévia) e simulador — ambos exigem
-   credenciais e autorização de custos. Itens já entregues: biblioteca versionada, configuração de linguagem
-   independente da personagem, compilador de instruções em camadas (segurança > fatos > persona > estilo > canal)
-   com testes, catálogo de vozes, prévia de voz (TTS) e simulador.
-2. **Fase 4 — Atendimento**: motor da recepcionista com ferramentas sobre a agenda real (usando o motor e o
-   resolvedor de datas já prontos), verificação de afirmações (preço/horário/confirmação) antes de responder,
-   integração oficial de WhatsApp, gateway de voz em tempo real, transferência humana e central de conversas.
-3. Harness dos **200+ cenários conversacionais** (Fase 7) a partir do resolvedor PT-BR e do motor de agenda.
-4. Decidir provedores (telefonia, voz, e-mail, pagamentos) com cotações reais — **requer autorização** por gerar custos.
+1. **Ativar e medir a recepcionista com um modelo real** — **requer sua autorização** (gera custo por uso):
+   configurar `ANTHROPIC_API_KEY` no servidor, testar pelo simulador e medir qualidade, taxa de reprovação do
+   verificador, latência e custo por conversa; ajustar `ANTHROPIC_EFFORT` (ex.: `low` para ligações) com base nos números.
+2. **Harness dos 200+ cenários conversacionais** (Fase 7) sobre o motor pronto: roteiros de agendamento,
+   remarcação, cancelamento, preço, serviço inexistente, datas ambíguas, injeção de instruções e pedido de humano —
+   executáveis com modelo roteirizado (regressão) e com o modelo real (medição, com custo autorizado).
+3. **Fase 4b — WhatsApp Business Platform** (Cloud API oficial): consultar a documentação atual da Meta,
+   webhook com verificação de assinatura, envio de mensagens, janela de 24 h e modelos aprovados, resposta da
+   equipe pelo painel, fila por contato. Requer app Meta, número verificado e credenciais (**autorização**).
+4. **Telefonia e voz**: escolher provedores (SIP/VoIP, reconhecimento e síntese de voz) com cotações reais —
+   **requer autorização** por gerar custos; depois, gateway de voz em tempo real e catálogo/prévia de vozes no Voice Studio.
+5. Demais provedores (e-mail transacional, pagamentos) — também dependem de autorização.

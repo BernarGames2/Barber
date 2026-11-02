@@ -62,6 +62,14 @@ nenhum acesso ao schema `drizzle`. Ele recusa conceder permissões a um papel co
 | `personas`             | personagens: `tenant_id` nulo = biblioteca da plataforma; preenchido = personagem própria. Definição completa em JSONB, `version` incrementada quando a biblioteca muda                                              | leitura: biblioteca + próprias; escrita: só as próprias (biblioteca apenas pelo papel dono) |
 | `receptionist_configs` | uma por estabelecimento: personagem (+ versão escolhida), voz (quando houver provedor), formalidade, gírias, emojis, entusiasmo, descontração, uso do nome, saudação/despedida, expressões, vocabulário, orientações | isolamento por `tenant_id`                                                                  |
 
+### Conversas (migrações 0004–0005)
+
+| Tabela                   | Descrição                                                                                                                                                                | Restrições                                                                       |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------- |
+| `conversations`          | atendimento por canal (`PHONE`/`WHATSAPP`), `is_simulation`, status (`OPEN`, `HANDOFF`, `CLOSED`), contato E.164, cliente, instruções e linguagem **congeladas**, modelo | RLS; FK composta para cliente; telefone E.164                                    |
+| `conversation_messages`  | linha do tempo legível: cliente, recepcionista, equipe, sistema e ferramentas (entrada, saída, evidências), resultado do verificador; `external_id` p/ webhooks          | RLS; FK composta; `external_id` único por estabelecimento                        |
+| `conversation_llm_turns` | histórico exato enviado ao modelo, por rodada (`seq`)                                                                                                                    | RLS; `seq` único por conversa; **somente-acréscimo** (UPDATE revogado + gatilho) |
+
 ### `appointments` em detalhe
 
 - `starts_at`, `ends_at` (fim do atendimento) e `blocked_until` (fim + intervalo de limpeza).
