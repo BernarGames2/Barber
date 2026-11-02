@@ -80,6 +80,22 @@ Muito obrigado!
 Envie no máximo **10 por dia**, em horário comercial: muitas mensagens seguidas para números fora dos contatos
 podem fazer o WhatsApp restringir a conta.
 
+### Aprendizados da 1ª rodada (02/11/2026)
+
+- **Resposta automática não é resposta da pesquisa.** Na primeira rodada, as barbearias responderam com
+  atendimento automático. Não anote isso como opinião. Muitas vezes é só a mensagem de saudação/ausência do
+  WhatsApp Business, e o dono lê depois: espere 1–2 dias e peça para falar com o dono ou com quem cuida da agenda.
+- **A resposta automática é um dado de mercado.** Registre o tipo (mensagem fixa, link de agendamento — de qual
+  sistema —, chatbot de menu ou IA conversacional): mostra o que as barbearias já usam e o que o Barber Voice
+  precisa superar.
+- **Viés da amostra.** Parte da lista veio de diretórios de sistemas de agendamento (ex.: Fresha), que concentram
+  barbearias já digitalizadas. Na próxima rodada, misture barbearias do bairro, Google Maps e Instagram,
+  incluindo as menores (1 barbeiro) e as que atendem por ordem de chegada.
+- **Para falar com pessoas:** ligação (quem atende é gente; o roteiro funciona igual) e visita presencial em
+  horário vazio (manhã de terça a quinta) rendem respostas mais confiáveis que mensagem.
+- **Pergunta extra para quem já automatiza:** "O que vocês usam hoje no WhatsApp? O que ele não resolve? Quanto
+  pagam?"
+
 ## 4. Planilha de registro
 
 Use o modelo [`validacao-mercado-modelo.csv`](validacao-mercado-modelo.csv) (abre no Excel ou Google Planilhas).
