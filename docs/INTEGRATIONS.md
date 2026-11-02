@@ -35,6 +35,12 @@ medição gera custo e depende de autorização. Limites de gasto por estabeleci
 **realmente distintas**), latência do primeiro áudio, streaming, estabilidade com áudio telefônico (8 kHz),
 custo por minuto/caractere e licença comercial. Recomenda-se teste cego com os Founding Partners antes de decidir.
 
+**Decisões do proprietário (02/11/2026)** — cada barbearia usa o **próprio número**: no WhatsApp, conecta o
+número dela à plataforma (fluxo oficial da Meta para provedores de tecnologia; avaliar a coexistência com o app
+WhatsApp Business); nas ligações, ativa o desvio na operadora para um número virtual da plataforma (um por
+barbearia, invisível ao cliente). Padrão: a recepcionista **atende sempre** (desvio incondicional); "só quando a
+equipe não atende" ficará como opção por barbearia.
+
 **Telefonia** — opções a avaliar: provedores programáveis com streaming de mídia por WebSocket (ex.: Twilio,
 Telnyx, Vonage) ou operadoras VoIP brasileiras com tronco SIP conectado a um servidor SIP próprio. Para o piloto,
 o caminho mais simples costuma ser **desvio de chamadas** do número atual do estabelecimento para o número da
