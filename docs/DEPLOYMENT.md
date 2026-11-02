@@ -3,7 +3,46 @@
 > Publicar em produção, contratar infraestrutura ou alterar serviços externos **exige autorização do
 > proprietário do projeto**. Este guia descreve o procedimento; nada foi publicado até o momento.
 
-## Topologia recomendada
+## Opção A — Vercel com serviços (`vercel.json`)
+
+Um único projeto Vercel, um domínio, dois serviços construídos separadamente:
+
+| Serviço | Pasta      | Framework | Rota pública           | Ponto de entrada                                                 |
+| ------- | ---------- | --------- | ---------------------- | ---------------------------------------------------------------- |
+| `api`   | `apps/api` | fastify   | `/api/*`               | `src/vercel.ts` (handler `(req, res)` sobre a instância Fastify) |
+| `web`   | `apps/web` | nextjs    | todo o resto (`/(.*)`) | Next.js (App Router)                                             |
+
+- **Sem chamadas internas entre serviços**: o navegador chama `/api/*` no mesmo domínio (cookie de sessão
+  first-party); nenhum serviço chama o outro pelo servidor, então não há _bindings_. O painel só encaminha
+  `/api/*` por conta própria fora da Vercel (`next.config.ts`).
+- **Caminho recebido pela API**: a Vercel entrega o caminho público (`/api/v1/...`); a API remove o prefixo
+  configurado em `API_PATH_PREFIX` (padrão `/api`) e também responde sem ele (health checks).
+- **Origem confiável**: além de `WEB_ORIGIN`, a API aceita `https://$VERCEL_URL` (domínio da implantação,
+  inclusive previews). Domínios próprios e aliases de branch precisam estar em `WEB_ORIGIN`.
+- **Variáveis** (no projeto Vercel, valem para os dois serviços): `DATABASE_URL` (de preferência a URL com
+  _pooler_), `DB_POOL_MAX` baixo (ex.: 3 — cada instância da função tem seu pool), `ENCRYPTION_KEY`,
+  `COOKIE_SECURE=true`, `WEB_ORIGIN`, `PUBLIC_WEB_URL`, `REDIS_URL` (rate limit compartilhado entre
+  instâncias), `MAIL_PROVIDER` e, quando autorizado, `ANTHROPIC_API_KEY`.
+- **Migrações não rodam no deploy da Vercel**: execute `pnpm db:migrate` (com `DATABASE_ADMIN_URL`) como etapa
+  separada, antes de promover a nova versão.
+
+**Limitações conhecidas desta opção** (verificar antes de produção):
+
+- Funções não são processos persistentes: o gateway de **voz em tempo real** (WebSocket com a telefonia, Fase 4)
+  não roda como função — precisará de um serviço em contêiner (o formato de serviços aceita `runtime: "container"`
+  com Dockerfile) ou de outro host.
+- Turnos da recepcionista com várias chamadas ao modelo podem passar do tempo padrão de execução da função —
+  medir e, se preciso, aumentar a duração máxima do serviço `api`.
+- A ordem das mensagens por conversa é garantida por instância; com várias instâncias, depende da fila por
+  contato (Fase 4b).
+- `TRUST_PROXY`: confirmar no primeiro deploy que `request.ip` reflete o IP do cliente (rate limit por IP).
+- **Não verificado neste ambiente**: `vercel build`, `vercel dev` e o deploy em si (sem acesso à Vercel daqui). O
+  `vercel.json` foi validado com o código oficial de resolução de serviços (`@vercel/fs-detectors` 7.11.4 e
+  `@vercel/routing-utils` 6.6.1), e o handler `src/vercel.ts` foi testado servindo os caminhos públicos.
+
+## Opção B — Painel e API em hosts separados (contêiner)
+
+### Topologia recomendada
 
 | Componente          | Sugestão                                                        | Observações                                                          |
 | ------------------- | --------------------------------------------------------------- | -------------------------------------------------------------------- |
@@ -14,8 +53,8 @@
 | Observabilidade     | Agregador de logs JSON + Sentry + monitor de disponibilidade    | ver abaixo                                                           |
 
 Domínios sugeridos: `app.barbervoice.com.br` (painel) e um domínio interno/privado para a API. Como o painel
-encaminha `/api/*`, a API não precisa ficar exposta ao navegador — apenas ao painel e, na Fase 4, aos webhooks
-dos provedores.
+encaminha `/api/*` (mantendo o prefixo) para `API_INTERNAL_URL`, a API não precisa ficar exposta ao navegador —
+apenas ao painel e, na Fase 4, aos webhooks dos provedores.
 
 ## 1. Banco de dados
 

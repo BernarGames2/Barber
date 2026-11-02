@@ -35,11 +35,13 @@ flowchart LR
 - **packages/db** — schema, migrações e utilitários (`withTenant`, lock por profissional, mapeamento de erros).
 - **packages/contracts** — schemas Zod compartilhados: a mesma validação no formulário e na API.
 
-### Por que a API não roda na Vercel?
+### Onde a API roda
 
-Voz em tempo real exige conexões persistentes (WebSocket de mídia com o provedor de telefonia), filas e
-workers. O painel pode ficar na Vercel; a API, o gateway de voz e os workers rodam em contêineres
-(Fly.io, Railway, Render, ECS, Cloud Run com WebSocket etc.) — ver [DEPLOYMENT.md](DEPLOYMENT.md).
+A API tem dois pontos de entrada sobre a mesma montagem (`src/runtime.ts`): `src/server.ts` (servidor HTTP
+próprio — desenvolvimento e contêiner) e `src/vercel.ts` (função da Vercel, serviço `api` do `vercel.json`).
+As rotas públicas ficam sob `/api` (`API_PATH_PREFIX`) em todos os ambientes. A Vercel atende o painel e a
+API REST; a **voz em tempo real** (WebSocket de mídia com a telefonia), filas e workers exigem processos
+persistentes e vão rodar em contêiner — ver [DEPLOYMENT.md](DEPLOYMENT.md).
 
 ## Decisões técnicas
 

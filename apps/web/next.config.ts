@@ -1,7 +1,12 @@
 import path from 'node:path';
 import type { NextConfig } from 'next';
 
-const API_INTERNAL_URL = process.env.API_INTERNAL_URL ?? 'http://localhost:4000';
+/**
+ * Fora da Vercel (desenvolvimento local, contêiner), o próprio Next encaminha /api/* para a API.
+ * Na Vercel, o roteamento /api/* → serviço "api" é feito pelo vercel.json, antes do Next.
+ */
+const ON_VERCEL = process.env.VERCEL === '1';
+const API_INTERNAL_URL = process.env.API_INTERNAL_URL ?? (ON_VERCEL ? null : 'http://localhost:4000');
 
 const securityHeaders = [
   { key: 'X-Content-Type-Options', value: 'nosniff' },
@@ -22,7 +27,10 @@ const nextConfig: NextConfig = {
    * first-party (SameSite=Lax) e nenhuma credencial ou URL interna vai para o navegador.
    */
   async rewrites() {
-    return [{ source: '/api/:path*', destination: `${API_INTERNAL_URL}/:path*` }];
+    // o prefixo /api é mantido: a API publica as rotas em /api/* em todos os ambientes
+    return API_INTERNAL_URL
+      ? [{ source: '/api/:path*', destination: `${API_INTERNAL_URL.replace(/\/$/, '')}/api/:path*` }]
+      : [];
   },
   async headers() {
     return [{ source: '/:path*', headers: securityHeaders }];

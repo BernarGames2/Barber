@@ -1,7 +1,10 @@
 # API do Barber Voice
 
-Base: `https://<api>/` (em desenvolvimento `http://localhost:4000`). O painel acessa a API pelo mesmo
-domínio em `/api/*`. Todas as rotas versionadas ficam sob `/v1`.
+Base pública: `https://<domínio do painel>/api` — o navegador acessa a API pelo mesmo domínio, e todas as rotas
+versionadas ficam sob `/api/v1`. Na Vercel, `/api/*` é roteado ao serviço `api` pelo `vercel.json`; fora dela, o
+painel encaminha `/api/*` para `API_INTERNAL_URL` (em desenvolvimento `http://localhost:4000`). A API remove o
+prefixo `API_PATH_PREFIX` (padrão `/api`) e também aceita os caminhos sem ele (ex.: `/health`, `/v1/...`).
+Neste documento, as rotas aparecem sem o prefixo `/api`.
 
 ## Convenções
 

@@ -29,6 +29,13 @@ const schema = z.object({
   MAIL_PROVIDER: z.enum(['console', 'memory']).default('console'),
   MAIL_FROM: z.string().default('Barber Voice <nao-responda@barbervoice.com.br>'),
   RATE_LIMIT_GLOBAL_PER_MIN: z.coerce.number().int().min(10).default(300),
+  /** Prefixo público das rotas da API (o painel e a Vercel publicam a API em /api/*). */
+  API_PATH_PREFIX: z
+    .string()
+    .regex(/^(\/[a-z0-9-]+)*$/, 'API_PATH_PREFIX deve começar com "/" (ex.: /api) ou ser vazio')
+    .default('/api'),
+  /** Domínio da implantação, definido pela Vercel (sem protocolo). */
+  VERCEL_URL: z.string().optional(),
   /** Recepcionista de IA (Anthropic). Sem chave, o atendimento por IA fica "não integrado". */
   ANTHROPIC_API_KEY: z.string().optional(),
   ANTHROPIC_MODEL: z.string().min(1).default('claude-opus-5-5'),
@@ -47,6 +54,13 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
   const allowedOrigins = cfg.WEB_ORIGIN.split(',')
     .map((o) => o.trim().replace(/\/$/, ''))
     .filter(Boolean);
+  // Na Vercel, o painel e a API dividem o domínio da implantação (inclusive em previews)
+  const vercelHost = cfg.VERCEL_URL?.trim()
+    .replace(/^https?:\/\//, '')
+    .replace(/\/$/, '');
+  if (vercelHost && !allowedOrigins.includes(`https://${vercelHost}`)) {
+    allowedOrigins.push(`https://${vercelHost}`);
+  }
 
   if (cfg.NODE_ENV === 'production') {
     const problems: string[] = [];

@@ -1,29 +1,10 @@
-import { createDb, loadEnv } from '@barber-voice/db';
-import { Redis } from 'ioredis';
-import { buildApp } from './app';
-import { loadConfig } from './config';
+import { createRuntime } from './runtime';
 
-loadEnv();
-const config = loadConfig();
-
-const database = createDb(config.DATABASE_URL, {
-  max: config.DB_POOL_MAX,
-  applicationName: 'barber-voice-api',
-});
-const redis = config.REDIS_URL
-  ? new Redis(config.REDIS_URL, {
-      connectTimeout: 1000,
-      maxRetriesPerRequest: 1,
-      enableOfflineQueue: false,
-      lazyConnect: false,
-    })
-  : null;
-redis?.on('error', () => undefined); // o rate limit falha aberto; erros já são registrados pelo plugin
-
-const app = await buildApp(
-  { config, db: database.db, clock: () => new Date() },
-  { redis: redis ?? undefined },
-);
+/**
+ * Servidor HTTP próprio (desenvolvimento e contêiner). Na Vercel, o ponto de entrada é `vercel.ts`.
+ */
+const runtime = await createRuntime();
+const { app, config } = runtime;
 
 let shuttingDown = false;
 async function shutdown(signal: string) {
@@ -31,9 +12,7 @@ async function shutdown(signal: string) {
   shuttingDown = true;
   app.log.info({ signal }, 'encerrando com segurança');
   try {
-    await app.close();
-    await database.close();
-    redis?.disconnect();
+    await runtime.close();
   } finally {
     process.exit(0);
   }

@@ -95,6 +95,6 @@ impressos no log da API.
 - [docs/API_DOCUMENTATION.md](docs/API_DOCUMENTATION.md) — endpoints, erros, autenticação
 - [docs/SECURITY.md](docs/SECURITY.md) — controles de segurança e LGPD
 - [docs/TESTING.md](docs/TESTING.md) — estratégia e execução de testes
-- [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) — implantação em produção
+- [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) — implantação: Vercel com serviços (`vercel.json`: `web` + `api`) ou contêineres
 - [docs/INTEGRATIONS.md](docs/INTEGRATIONS.md) — contas externas, credenciais e custos
 - [docs/VOICE_STUDIO.md](docs/VOICE_STUDIO.md) — projeto do sistema de personagens

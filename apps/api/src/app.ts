@@ -37,6 +37,14 @@ function parseTrustProxy(value: string): boolean | string[] {
     .filter(Boolean);
 }
 
+/** Remove o prefixo público (ex.: "/api") do caminho, preservando a query string. */
+export function stripPathPrefix(url: string, prefix: string): string {
+  if (!prefix || prefix === '/') return url;
+  if (url === prefix || url.startsWith(`${prefix}?`)) return `/${url.slice(prefix.length)}`;
+  if (url.startsWith(`${prefix}/`)) return url.slice(prefix.length);
+  return url;
+}
+
 export async function buildApp(
   deps: Omit<AppDeps, 'mailer' | 'llm'> & { mailer?: Mailer; llm?: LlmClient | null },
   options: BuildOptions = {},
@@ -56,6 +64,9 @@ export async function buildApp(
       },
     },
     trustProxy: parseTrustProxy(deps.config.TRUST_PROXY),
+    // Rotas públicas ficam sob /api (Vercel e proxy do painel); a API também responde sem o prefixo
+    // (health checks de contêiner e chamadas diretas).
+    rewriteUrl: (req) => stripPathPrefix(req.url ?? '/', deps.config.API_PATH_PREFIX),
     bodyLimit: 256 * 1024,
     requestIdHeader: 'x-request-id',
     genReqId: () => randomUUID(),
