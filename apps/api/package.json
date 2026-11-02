@@ -1,0 +1,38 @@
+{
+  "name": "@barber-voice/api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "API do Barber Voice (Fastify): autenticação, multi-tenant, agenda, CRM e, nas próximas fases, voz e WhatsApp.",
+  "scripts": {
+    "dev": "tsx watch --clear-screen=false src/server.ts",
+    "start": "node dist/server.js",
+    "build": "node build.mjs",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "seed:demo": "tsx scripts/seed-demo.ts"
+  },
+  "dependencies": {
+    "@barber-voice/contracts": "workspace:*",
+    "@barber-voice/core": "workspace:*",
+    "@barber-voice/db": "workspace:*",
+    "@fastify/cookie": "11.1.5",
+    "@fastify/cors": "11.3.1",
+    "@fastify/helmet": "13.2.0",
+    "@fastify/rate-limit": "11.2.1",
+    "@node-rs/argon2": "2.2.2",
+    "drizzle-orm": "0.45.4",
+    "fastify": "5.12.7",
+    "ioredis": "5.11.1",
+    "luxon": "3.7.2",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@types/luxon": "3.7.6",
+    "@types/node": "22.20.5",
+    "esbuild": "0.28.2",
+    "tsx": "4.23.15",
+    "typescript": "6.0.3",
+    "vitest": "4.1.12"
+  }
+}

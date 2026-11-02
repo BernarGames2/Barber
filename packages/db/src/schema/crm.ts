@@ -22,9 +22,9 @@ import { tenants } from './tenancy';
 
 export interface CustomerPreferences {
   /** Observações de estilo autorizadas pelo cliente (ex.: "degradê baixo"). */
-  style?: string;
+  style?: string | null;
   /** Bebida, conversa etc. — sempre informações que o cliente aceitou registrar. */
-  other?: string;
+  other?: string | null;
 }
 
 export const customers = pgTable(
