@@ -38,3 +38,7 @@ next-env.d.ts
 # Redis local
 dump.rdb
 *.rdb
+
+# Produção (VPS)
+deploy/.env
+deploy/backups/

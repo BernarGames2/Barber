@@ -1,0 +1,12 @@
+# Nunca enviar ao build: dependências locais, builds, segredos e histórico
+**/node_modules
+**/.next
+**/dist
+**/.turbo
+**/*.tsbuildinfo
+.git
+.env
+.env.*
+!.env.example
+deploy/.env
+*.rdb

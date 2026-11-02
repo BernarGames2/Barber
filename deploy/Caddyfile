@@ -1,0 +1,19 @@
+# Proxy reverso com HTTPS automático (certificados Let's Encrypt renovados pelo Caddy).
+{$DOMAIN} {
+	encode zstd gzip
+
+	# API: /api/* (a API remove o prefixo /api)
+	handle /api/* {
+		reverse_proxy api:4000
+	}
+
+	# Painel
+	handle {
+		reverse_proxy web:3000
+	}
+
+	log {
+		output stdout
+		format json
+	}
+}

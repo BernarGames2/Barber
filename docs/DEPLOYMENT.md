@@ -3,6 +3,53 @@
 > Publicar em produção, contratar infraestrutura ou alterar serviços externos **exige autorização do
 > proprietário do projeto**. Este guia descreve o procedimento; nada foi publicado até o momento.
 
+## Opção C — Servidor único (VPS): a mais econômica — recomendada para o piloto
+
+Tudo em um servidor de ~R$ 30–50/mês: painel, API, PostgreSQL, Redis, HTTPS automático (Caddy + Let's
+Encrypt) e backup diário. Arquivos em `deploy/` (`docker-compose.prod.yml`, `Caddyfile`, `.env.prod.example`,
+`update.sh`) e as imagens `apps/api/Dockerfile`, `apps/web/Dockerfile` e `deploy/Dockerfile.tools`.
+
+**Testado em 02/11/2026**: as três imagens foram construídas e a pilha completa subiu com HTTPS local; migrações
+e seeds rodaram sozinhos, a API conecta com o papel restrito `barber_app` (RLS), o E2E passou 17/17 por HTTPS e
+um backup foi restaurado com sucesso. Não testado: um servidor real na internet e certificado público (exige
+domínio e servidor seus).
+
+### Passo a passo
+
+1. **Domínio** — registre um domínio (ex.: em registro.br) e decida o endereço do painel, ex.:
+   `app.seudominio.com.br`.
+2. **Servidor** — crie uma conta num provedor de VPS e um servidor **Ubuntu 24.04** com **2 vCPU e 4 GB de RAM**
+   (ex.: Hetzner CX22/CX23, ~€ 4,50–8/mês). Para a voz em tempo real no futuro, um provedor com região em
+   **São Paulo** reduz a latência; para painel e WhatsApp, qualquer região serve. Ative o firewall do provedor
+   liberando só as portas **22, 80 e 443**.
+3. **DNS** — crie um registro **A** de `app.seudominio.com.br` apontando para o IP do servidor.
+4. **Instalar e subir** (no servidor, via SSH):
+   ```bash
+   curl -fsSL https://get.docker.com | sh
+   git clone <repositório> barber-voice && cd barber-voice
+   cp deploy/.env.prod.example deploy/.env
+   nano deploy/.env        # preencha: DOMAIN, 3 senhas (openssl rand -hex 24) e ENCRYPTION_KEY (openssl rand -base64 32)
+   docker compose -f deploy/docker-compose.prod.yml --env-file deploy/.env up -d --build
+   ```
+   Em alguns minutos o painel abre em `https://app.seudominio.com.br` com certificado válido.
+5. **Superadmin** — crie sua conta pelo painel e depois:
+   ```bash
+   docker compose -f deploy/docker-compose.prod.yml --env-file deploy/.env run --rm migrate \
+     pnpm --filter @barber-voice/db make-superadmin seu@email.com
+   ```
+6. **Backups** — ficam em `deploy/backups/` (um por dia, 14 dias). Copie-os também para fora do servidor
+   (ex.: armazenamento do próprio provedor ou baixando periodicamente) — um backup só no mesmo servidor não protege
+   contra a perda do servidor. Restaurar:
+   ```bash
+   docker compose -f deploy/docker-compose.prod.yml --env-file deploy/.env exec -T postgres \
+     pg_restore -U postgres -d barber_voice --clean --if-exists < deploy/backups/<arquivo>.dump
+   ```
+7. **Atualizar** para a versão mais nova do repositório: `sh deploy/update.sh` (migrações rodam antes da API).
+8. **Recepcionista de IA** (quando autorizado): preencha `ANTHROPIC_API_KEY` em `deploy/.env` e rode
+   `sh deploy/update.sh`. `ANTHROPIC_MODEL` define o modelo — escolha-o depois de medir qualidade e custo.
+
+Nunca versione `deploy/.env` (já está no `.gitignore`).
+
 ## Opção A — Vercel com serviços (`vercel.json`)
 
 Um único projeto Vercel, um domínio, dois serviços construídos separadamente:

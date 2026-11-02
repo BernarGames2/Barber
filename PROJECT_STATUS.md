@@ -148,6 +148,13 @@ o Voice Studio e o painel funcionam de ponta a ponta e podem ser usados manualme
 9. Revisão do fluxo de reserva da IA: uma reserva temporária já vencida, mas ainda não marcada como expirada pela
    limpeza, podia ser confirmada. Agora a confirmação verifica o vencimento (`HOLD_EXPIRED`) — coberto por teste.
 
+### Implantação econômica em servidor único (pronta e testada, não publicada)
+
+`deploy/docker-compose.prod.yml` sobe painel, API, PostgreSQL, Redis, HTTPS automático (Caddy) e backup diário em
+um VPS de ~R$ 30–50/mês. Testado aqui com Docker: imagens construídas, pilha completa saudável, migrações e seeds
+automáticos, E2E **17/17 por HTTPS** e restauração de backup verificada. Falta um servidor e um domínio reais
+(do proprietário). Guia: [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md#opção-c--servidor-único-vps-a-mais-econômica--recomendada-para-o-piloto).
+
 ### Implantação na Vercel (configurada, não publicada)
 
 `vercel.json` com dois serviços — `web` (Next.js, rota `/(.*)`) e `api` (Fastify, rota `/api/*`, ponto de
@@ -162,7 +169,6 @@ foram executados** (sem acesso à Vercel neste ambiente e publicação exige aut
 - **Chamada real ao modelo de IA**: nenhuma requisição foi feita à Anthropic (sem chave e sem autorização de
   custos). O comportamento conversacional real (qualidade, uso correto das ferramentas, taxa de reprovação do
   verificador, latência e custo por conversa) **precisa ser medido** com chave e com o harness de cenários.
-- Imagem Docker da API (`apps/api/Dockerfile`): **não foi construída neste ambiente** (sem daemon Docker).
 - Várias instâncias da API atendendo a mesma conversa (a ordem por conversa é garantida por processo; a fila por
   contato chega com os canais).
 - Rate limit com Redis (testado apenas em memória).

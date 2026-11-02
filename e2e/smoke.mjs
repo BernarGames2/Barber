@@ -40,6 +40,8 @@ const shot = async (page, name) => {
 
 const browser = await chromium.launch();
 const context = await browser.newContext({
+  // --insecure=true: aceita certificado local (ex.: teste da pilha de produção em https://localhost)
+  ignoreHTTPSErrors: args.insecure === 'true',
   viewport: { width: 1440, height: 900 },
   locale: 'pt-BR',
   timezoneId: 'America/Sao_Paulo',
@@ -208,6 +210,7 @@ try {
 
   await step('mobile: agenda em lista e navegação inferior', async () => {
     const mobile = await browser.newContext({
+      ignoreHTTPSErrors: args.insecure === 'true',
       viewport: { width: 390, height: 844 },
       deviceScaleFactor: 2,
       locale: 'pt-BR',

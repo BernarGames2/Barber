@@ -18,6 +18,10 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  // imagem Docker (VPS): servidor Node mínimo; na Vercel a saída padrão é usada
+  ...(process.env.NEXT_OUTPUT_STANDALONE === '1'
+    ? { output: 'standalone' as const, outputFileTracingRoot: path.join(process.cwd(), '..', '..') }
+    : {}),
   turbopack: {
     // monorepo: pacotes do workspace ficam dois níveis acima
     root: path.join(process.cwd(), '..', '..'),
