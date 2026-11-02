@@ -55,6 +55,13 @@ nenhum acesso ao schema `drizzle`. Ele recusa conceder permissões a um papel co
 | `appointment_items`          | serviços do agendamento com preço/duração **congelados**                          | FKs compostas                                                                         |
 | `waitlist_entries`           | lista de espera — endpoints pendentes (Fase 5)                                    | FKs compostas                                                                         |
 
+### Voice Studio (migrações 0002–0003)
+
+| Tabela                 | Descrição                                                                                                                                                                                                            | RLS                                                                                         |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| `personas`             | personagens: `tenant_id` nulo = biblioteca da plataforma; preenchido = personagem própria. Definição completa em JSONB, `version` incrementada quando a biblioteca muda                                              | leitura: biblioteca + próprias; escrita: só as próprias (biblioteca apenas pelo papel dono) |
+| `receptionist_configs` | uma por estabelecimento: personagem (+ versão escolhida), voz (quando houver provedor), formalidade, gírias, emojis, entusiasmo, descontração, uso do nome, saudação/despedida, expressões, vocabulário, orientações | isolamento por `tenant_id`                                                                  |
+
 ### `appointments` em detalhe
 
 - `starts_at`, `ends_at` (fim do atendimento) e `blocked_until` (fim + intervalo de limpeza).

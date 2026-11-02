@@ -1,6 +1,11 @@
 # Voice Studio — sistema de personagens
 
-> Situação: **especificação** (Fase 3). O painel exibe uma tela informativa; nenhuma funcionalidade é simulada.
+> Situação (02/11/2026): **núcleo implementado e testado** — biblioteca, configuração de linguagem independente,
+> compilador de instruções, validador de estilo, personagens próprias e tela no painel. **Pendentes**: vozes reais
+> e prévia de voz (provedor de TTS) e simulador (modelo de IA). Nenhuma dessas partes é simulada.
+>
+> Código: `packages/core/src/persona/*`, `packages/db/src/schema/voice-studio.ts` (migrações 0002–0003),
+> `apps/api/src/modules/voice-studio/*`, `apps/web/src/app/painel/voice-studio/page.tsx`.
 > As bases técnicas que o Voice Studio usará já existem e estão testadas: normalização de fala
 > (`toSpeechText`, preços/horários/datas por extenso, remoção de emojis), resolvedor de datas PT-BR e motor de agenda.
 
@@ -49,7 +54,15 @@ Combinações contraditórias são resolvidas de forma **transparente** (a tela 
 Extensível para estúdios de cachos, coloração, tranças, unissex, estética e redes — novas personagens são
 **dados versionados**, não código.
 
-## Modelo de dados planejado
+## Modelo de dados
+
+**Implementado** (migrações 0002–0003, detalhes em [DATABASE.md](DATABASE.md#voice-studio-migrações-00020003)):
+`personas` (a definição completa da personagem fica em `definition` JSONB, versionada) e `receptionist_configs`
+(uma por estabelecimento, com `version` incrementada a cada gravação e auditoria).
+
+**Planejado**: `voices` (depende do provedor de TTS), `receptionist_config_versions` (histórico de publicações
+e rollback) e os campos de publicação (`status`, `published_at`, `handoff_rules`, `recording_enabled`), que
+entram com o motor da recepcionista na Fase 4. Desenho original de referência:
 
 ```
 personas            id, tenant_id (NULL = biblioteca), key, name, segment, version, status,

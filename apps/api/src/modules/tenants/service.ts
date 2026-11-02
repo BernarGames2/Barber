@@ -196,16 +196,14 @@ export async function setBusinessHours(
   await withTenant(ctx.deps.db, ctx.tenant.id, async (tx) => {
     await tx.delete(businessHours).where(eq(businessHours.tenantId, ctx.tenant.id));
     if (intervals.length) {
-      await tx
-        .insert(businessHours)
-        .values(
-          intervals.map((i) => ({
-            tenantId: ctx.tenant.id,
-            weekday: i.weekday,
-            startTime: i.start,
-            endTime: i.end,
-          })),
-        );
+      await tx.insert(businessHours).values(
+        intervals.map((i) => ({
+          tenantId: ctx.tenant.id,
+          weekday: i.weekday,
+          startTime: i.start,
+          endTime: i.end,
+        })),
+      );
     }
     await audit(tx, {
       tenantId: ctx.tenant.id,

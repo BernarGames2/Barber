@@ -227,6 +227,27 @@ try {
     await mobile.close();
   });
 
+  await step('Voice Studio: personagem + linguagem independentes, salvar e ver instruções', async () => {
+    await page.goto(`${BASE}/painel/voice-studio`);
+    await page.getByRole('heading', { name: 'Voice Studio' }).waitFor();
+    await page.getByRole('button', { name: /Rocker/ }).click();
+    await page
+      .getByRole('radiogroup', { name: 'Formalidade' })
+      .getByRole('radio', { name: 'Formal', exact: true })
+      .click();
+    await page
+      .getByRole('radiogroup', { name: 'Intensidade das gírias' })
+      .getByRole('radio', { name: 'Alta' })
+      .click();
+    await page.getByText('Linguagem formal não usa gírias.').waitFor(); // ajuste transparente
+    await page.getByRole('button', { name: 'Salvar recepcionista' }).first().click();
+    await page.getByText('Recepcionista salva').waitFor();
+    await page.getByRole('button', { name: /Ver instruções/ }).click();
+    await page.getByRole('button', { name: /REGRAS INVIOLÁVEIS/ }).click();
+    await page.getByText('Nunca invente horários, preços').waitFor();
+    await shot(page, '19-voice-studio');
+  });
+
   await step('logout encerra a sessão', async () => {
     await page.goto(`${BASE}/painel`);
     await page.getByRole('button', { name: 'Sair' }).click();

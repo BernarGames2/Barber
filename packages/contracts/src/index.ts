@@ -6,3 +6,4 @@ export * from './customers';
 export * from './appointments';
 export * from './dashboard';
 export * from './labels';
+export * from './voice-studio';

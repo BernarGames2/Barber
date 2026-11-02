@@ -5,15 +5,15 @@
 
 ## Resumo
 
-| Fase              | Escopo                                                                    | Situação                                                         |
-| ----------------- | ------------------------------------------------------------------------- | ---------------------------------------------------------------- |
-| **1 — Fundação**  | Arquitetura, banco, autenticação, multi-tenancy, design system, estrutura | ✅ Concluída                                                     |
-| **2 — Operação**  | Cadastro/onboarding, serviços, profissionais, agenda, clientes            | ✅ Concluída (com pendências menores listadas abaixo)            |
-| 3 — Voice Studio  | Personagens, vozes, linguagem, simulador                                  | ⏳ Não iniciada (tela informativa no painel)                     |
-| 4 — Atendimento   | Motor de IA, telefonia, WhatsApp, transferência, central de conversas     | ⏳ Não iniciada                                                  |
-| 5 — Inteligência  | CRM avançado, Copilot, inteligência comercial, recuperação                | ⏳ Não iniciada (dashboard básico real já existe)                |
-| 6 — Administração | Superadmin, planos, pagamentos, custos                                    | ⏳ Estrutura de planos/assinatura no banco; sem telas/pagamentos |
-| 7 — Qualidade     | 200 cenários conversacionais, segurança, performance, piloto              | ⏳ Base de testes criada; cenários de IA dependem da Fase 4      |
+| Fase              | Escopo                                                                    | Situação                                                                              |
+| ----------------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| **1 — Fundação**  | Arquitetura, banco, autenticação, multi-tenancy, design system, estrutura | ✅ Concluída                                                                          |
+| **2 — Operação**  | Cadastro/onboarding, serviços, profissionais, agenda, clientes            | ✅ Concluída (com pendências menores listadas abaixo)                                 |
+| 3 — Voice Studio  | Personagens, vozes, linguagem, simulador                                  | 🟡 Em andamento — núcleo pronto (ver abaixo); voz e simulador dependem de integrações |
+| 4 — Atendimento   | Motor de IA, telefonia, WhatsApp, transferência, central de conversas     | ⏳ Não iniciada                                                                       |
+| 5 — Inteligência  | CRM avançado, Copilot, inteligência comercial, recuperação                | ⏳ Não iniciada (dashboard básico real já existe)                                     |
+| 6 — Administração | Superadmin, planos, pagamentos, custos                                    | ⏳ Estrutura de planos/assinatura no banco; sem telas/pagamentos                      |
+| 7 — Qualidade     | 200 cenários conversacionais, segurança, performance, piloto              | ⏳ Base de testes criada; cenários de IA dependem da Fase 4                           |
 
 **O produto ainda NÃO está pronto para piloto**: a recepcionista de IA, a telefonia e o WhatsApp
 (critérios centrais de aprovação) dependem das Fases 3 e 4. A agenda, o CRM e o painel já
@@ -72,20 +72,33 @@ funcionam de ponta a ponta e podem ser usados manualmente.
 - Landing page, termos de uso e política de privacidade (versões preliminares, sinalizadas como tal).
 - Seed de demonstração (`is_demo`, aviso permanente no painel) e script de superadmin via CLI.
 
+### Voice Studio (Fase 3 — núcleo concluído)
+
+- Biblioteca de 11 personagens versionada no banco (Rocker, Clássico, Urban, Premium, Esportivo, Retrô, Sofia,
+  Bia, Helena, Fashion, Natural), com exemplos por formalidade escritos sem presumir gênero de cliente,
+  profissional ou recepcionista (verificado por teste).
+- Personagem e linguagem **independentes**: formalidade, gírias, emojis (só WhatsApp), entusiasmo, descontração,
+  uso do nome, nome da recepcionista; combinações contraditórias resolvidas com ajuste **visível** ao proprietário.
+- Compilador determinístico de instruções em camadas (regras invioláveis → dados reais do estabelecimento →
+  personagem → linguagem → canal → orientações livres), com prévia transparente no painel.
+- Validador de estilo das respostas (emojis, dígitos/markdown na voz, tamanho, intimidade, gírias em linguagem formal).
+- Personagens próprias (plano com o recurso) e personalização avançada controlada pelo plano no servidor.
+- Pendente: catálogo e prévia de vozes (requer provedor de TTS) e simulador (requer modelo de IA).
+
 ---
 
 ## Testes executados (02/11/2026)
 
-| Suíte                                        | O que cobre                                                                                                                                                                                                                                                                                                           | Resultado           |
-| -------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------- |
-| `packages/core`                              | motor de agenda, fuzz de 300 cenários aleatórios (equivalência com validação individual), DST, desempenho (7 dias × 10 profissionais < 50 ms), ~110 expressões temporais PT-BR, fala, telefone, dinheiro, UUID                                                                                                        | **143/143 ✅**      |
-| `packages/db`                                | RLS (leitura, escrita, UPDATE/DELETE cruzados, vazamento de contexto entre transações), FKs compostas, exclusion constraint, **20 inserções concorrentes → 1 aceita**, permissões do papel da aplicação                                                                                                               | **14/14 ✅**        |
-| `packages/contracts`                         | validações compartilhadas painel↔API                                                                                                                                                                                                                                                                                  | **7/7 ✅**          |
-| `apps/api`                                   | autenticação e proteções HTTP, isolamento entre estabelecimentos via API, papéis, onboarding, catálogo, CRM/LGPD, disponibilidade, reservas, **15 reservas HTTP simultâneas → 1 confirmada**, "qualquer profissional" concorrente, idempotência (inclusive concorrente), remarcação atômica, HELD expirado, dashboard | **70/70 ✅**        |
-| E2E (`e2e/smoke.mjs`, Chromium real)         | cadastro → onboarding → agendamento com horário real → recusa do mesmo horário → CRM → dashboard → mobile → logout                                                                                                                                                                                                    | **15/15 etapas ✅** |
-| Typecheck (5 pacotes) e build (API + painel) | —                                                                                                                                                                                                                                                                                                                     | **✅**              |
+| Suíte                                        | O que cobre                                                                                                                                                                                                                                                                                                                                                                      | Resultado           |
+| -------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------- |
+| `packages/core`                              | motor de agenda, fuzz de 300 cenários aleatórios (equivalência com validação individual), DST, desempenho (7 dias × 10 profissionais < 50 ms), ~110 expressões temporais PT-BR, fala, telefone, dinheiro, UUID; Voice Studio: biblioteca, independência personagem×linguagem, compilador (66 combinações), validador de estilo                                                   | **172/172 ✅**      |
+| `packages/db`                                | RLS (leitura, escrita, UPDATE/DELETE cruzados, vazamento de contexto entre transações), FKs compostas, exclusion constraint, **20 inserções concorrentes → 1 aceita**, permissões do papel da aplicação; RLS de personagens (biblioteca somente leitura) e configuração da recepcionista                                                                                         | **18/18 ✅**        |
+| `packages/contracts`                         | validações compartilhadas painel↔API                                                                                                                                                                                                                                                                                                                                             | **7/7 ✅**          |
+| `apps/api`                                   | autenticação e proteções HTTP, isolamento entre estabelecimentos via API, papéis, onboarding, catálogo, CRM/LGPD, disponibilidade, reservas, **15 reservas HTTP simultâneas → 1 confirmada**, "qualquer profissional" concorrente, idempotência (inclusive concorrente), remarcação atômica, HELD expirado, dashboard, Voice Studio (planos, isolamento, prévia com dados reais) | **78/78 ✅**        |
+| E2E (`e2e/smoke.mjs`, Chromium real)         | cadastro → onboarding → agendamento com horário real → recusa do mesmo horário → CRM → dashboard → mobile → Voice Studio → logout                                                                                                                                                                                                                                                | **16/16 etapas ✅** |
+| Typecheck (5 pacotes) e build (API + painel) | —                                                                                                                                                                                                                                                                                                                                                                                | **✅**              |
 
-**Total: 234 testes automatizados + 15 etapas E2E, todos aprovados.**
+**Total: 275 testes automatizados + 16 etapas E2E, todos aprovados.**
 
 ### Problemas encontrados pelos testes e corrigidos
 
@@ -97,6 +110,8 @@ funcionam de ponta a ponta e podem ser usados manualmente.
 4. Logo sem as barras no celular: `id` de gradiente SVG repetido apontava para um SVG oculto — ids únicos.
 5. Gráfico de horários sem barras (altura percentual em item flex) e rótulos desalinhando a linha de base.
 6. `toSpeechText` removia o ponto final após "min."; bundle da API não encontrava dependência transitiva.
+7. Seed da biblioteca de personagens não era idempotente: o `jsonb` reordena chaves e toda execução incrementaria
+   a versão das 11 personagens. Corrigido com comparação canônica (chaves ordenadas).
 
 ### Ainda não testado
 
@@ -138,7 +153,8 @@ franquias dos planos (`packages/db/src/seed-plans.ts`) foram definidas de forma 
 
 ## Próximas etapas
 
-1. **Fase 3 — Voice Studio**: biblioteca de personagens versionada no banco, configuração de linguagem
+1. **Concluir a Fase 3**: provedor de TTS (catálogo de vozes reais e prévia) e simulador — ambos exigem
+   credenciais e autorização de custos. Itens já entregues: biblioteca versionada, configuração de linguagem
    independente da personagem, compilador de instruções em camadas (segurança > fatos > persona > estilo > canal)
    com testes, catálogo de vozes, prévia de voz (TTS) e simulador.
 2. **Fase 4 — Atendimento**: motor da recepcionista com ferramentas sobre a agenda real (usando o motor e o

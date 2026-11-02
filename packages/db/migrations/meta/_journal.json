@@ -15,6 +15,20 @@
       "when": 1793584292989,
       "tag": "0001_security_and_integrity",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1793588285473,
+      "tag": "0002_voice_studio",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1793588286448,
+      "tag": "0003_voice_studio_rls",
+      "breakpoints": true
     }
   ]
 }

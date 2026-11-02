@@ -29,7 +29,7 @@ const NAV = [
   { href: '/painel/clientes', label: 'Clientes', icon: Users },
   { href: '/painel/servicos', label: 'Serviços', icon: Scissors },
   { href: '/painel/profissionais', label: 'Profissionais', icon: UserRound },
-  { href: '/painel/voice-studio', label: 'Voice Studio', icon: AudioLines, soon: 'Fase 3' },
+  { href: '/painel/voice-studio', label: 'Voice Studio', icon: AudioLines },
   { href: '/painel/conversas', label: 'Conversas', icon: MessagesSquare, soon: 'Fase 4' },
   { href: '/painel/configuracoes', label: 'Configurações', icon: Settings },
 ] as const;

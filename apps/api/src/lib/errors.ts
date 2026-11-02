@@ -55,11 +55,9 @@ export function errorHandler(error: FastifyError | Error, request: FastifyReques
 
   const fe = error as FastifyError;
   if (fe.statusCode === 429) {
-    return reply
-      .status(429)
-      .send({
-        error: { code: 'RATE_LIMITED', message: 'Muitas requisições. Tente novamente em instantes.' },
-      });
+    return reply.status(429).send({
+      error: { code: 'RATE_LIMITED', message: 'Muitas requisições. Tente novamente em instantes.' },
+    });
   }
   if (fe.code === 'FST_ERR_CTP_INVALID_MEDIA_TYPE' || fe.statusCode === 415) {
     return reply

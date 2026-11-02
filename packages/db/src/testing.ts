@@ -2,6 +2,7 @@ import pg from 'pg';
 import { createDb } from './client';
 import { loadEnv } from './env';
 import { runMigrations } from './migrate';
+import { seedPersonaLibrary } from './seed-personas';
 import { seedPlans } from './seed-plans';
 
 export interface TestDatabaseUrls {
@@ -42,6 +43,7 @@ export async function resetTestDatabase(): Promise<TestDatabaseUrls> {
   const admin = createDb(urls.adminUrl, { max: 1 });
   try {
     await seedPlans(admin.db);
+    await seedPersonaLibrary(admin.db);
   } finally {
     await admin.close();
   }

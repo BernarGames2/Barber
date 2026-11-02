@@ -34,3 +34,7 @@ pnpm-debug.log*
 
 # next
 next-env.d.ts
+
+# Redis local
+dump.rdb
+*.rdb

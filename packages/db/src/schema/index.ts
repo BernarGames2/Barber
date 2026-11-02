@@ -6,3 +6,4 @@ export * from './crm';
 export * from './scheduling';
 export * from './billing';
 export * from './audit';
+export * from './voice-studio';

@@ -13,6 +13,7 @@ import { customerRoutes } from './modules/customers/routes';
 import { dashboardRoutes } from './modules/dashboard/routes';
 import { systemRoutes } from './modules/system/routes';
 import { tenantCreationRoutes, tenantRoutes } from './modules/tenants/routes';
+import { voiceStudioRoutes } from './modules/voice-studio/routes';
 import { authPlugin } from './plugins/auth';
 import { securityPlugin } from './plugins/security';
 import { resolveTenant } from './plugins/tenant';
@@ -98,6 +99,7 @@ export async function buildApp(
       customerRoutes(scoped);
       appointmentRoutes(scoped);
       dashboardRoutes(scoped);
+      voiceStudioRoutes(scoped);
     },
     { prefix: '/v1/tenants/:tenantId' },
   );

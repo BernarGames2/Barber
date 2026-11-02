@@ -158,6 +158,15 @@ Idempotency-Key: 6f1c…   (recomendado — repetir a mesma chave devolve a mesm
 | POST   | `…/customers/:id/consents`      | qualquer  | `{ purpose, granted, channel, evidence? }` — histórico somente-inserção |
 | POST   | `…/customers/:id/anonymize`     | gerente+  | LGPD, irreversível (`409` se houver agendamento futuro)                 |
 
+## Voice Studio
+
+| Método | Rota                      | Permissão | Descrição                                                                                                                                                                                                                                                                                                                                              |
+| ------ | ------------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| GET    | `…/voice-studio`          | qualquer  | biblioteca + personagens próprias, configuração atual, linguagem efetiva por canal (com ajustes e motivos), recursos do plano e integrações pendentes                                                                                                                                                                                                  |
+| PUT    | `…/voice-studio/config`   | gerente+  | `{ personaId, formality, slangLevel, emojisEnabled, enthusiasm, relaxation, useCustomerName, receptionistName?, greeting?, farewell?, signatureExpressions[], vocabularyPrefer[], vocabularyAvoid[], businessInstructions? }` — campos avançados exigem o recurso do plano (`403 PLAN_FEATURE_REQUIRED`); personagem invisível → `422 INVALID_PERSONA` |
+| POST   | `…/voice-studio/preview`  | gerente+  | mesma estrutura + `channel: "PHONE"\|"WHATSAPP"` → seções das instruções compiladas com os dados reais, `hash` e ajustes (nada é salvo)                                                                                                                                                                                                                |
+| POST   | `…/voice-studio/personas` | gerente+  | personagem própria a partir de uma da biblioteca: `{ basePersonaId, name, tagline, personality, speakingStyle, signaturePhrases[], presentation }` (requer plano com personagens próprias)                                                                                                                                                             |
+
 ## Dashboard
 
 `GET …/dashboard/summary[?date=AAAA-MM-DD]` — indicadores reais (ver `DashboardSummaryDto` em

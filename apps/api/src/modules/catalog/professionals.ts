@@ -83,17 +83,15 @@ async function replaceWorkingHours(
     .delete(professionalWorkingHours)
     .where(eq(professionalWorkingHours.professionalId, professionalId));
   if (hours && hours.length) {
-    await tx
-      .insert(professionalWorkingHours)
-      .values(
-        hours.map((h) => ({
-          tenantId,
-          professionalId,
-          weekday: h.weekday,
-          startTime: h.start,
-          endTime: h.end,
-        })),
-      );
+    await tx.insert(professionalWorkingHours).values(
+      hours.map((h) => ({
+        tenantId,
+        professionalId,
+        weekday: h.weekday,
+        startTime: h.start,
+        endTime: h.end,
+      })),
+    );
   }
   await tx
     .update(professionals)
@@ -152,15 +150,13 @@ export async function createProfessional(
       .returning();
     const id = p!.id;
     if (input.serviceIds.length) {
-      await tx
-        .insert(professionalServices)
-        .values(
-          [...new Set(input.serviceIds)].map((serviceId) => ({
-            tenantId: ctx.tenant.id,
-            professionalId: id,
-            serviceId,
-          })),
-        );
+      await tx.insert(professionalServices).values(
+        [...new Set(input.serviceIds)].map((serviceId) => ({
+          tenantId: ctx.tenant.id,
+          professionalId: id,
+          serviceId,
+        })),
+      );
     }
     if (input.workingHours) await replaceWorkingHours(tx, ctx.tenant.id, id, input.workingHours);
     await audit(tx, {

@@ -4,8 +4,8 @@ Plataforma SaaS de **recepcionistas de inteligência artificial** para barbearia
 atendimento por telefone e WhatsApp com a personalidade do estabelecimento, agenda inteligente sem
 conflitos, CRM e inteligência comercial.
 
-> Situação atual: Fases 1 (fundação) e 2 (operação) concluídas e testadas — agenda, CRM, onboarding e
-> painel funcionam de ponta a ponta. A recepcionista de IA, a telefonia e o WhatsApp chegam nas Fases 3–4.
+> Situação atual: Fases 1 (fundação) e 2 (operação) concluídas e testadas; Fase 3 (Voice Studio) com núcleo pronto — agenda, CRM, onboarding, personagens e
+> painel funcionam de ponta a ponta. O motor da recepcionista de IA, a telefonia e o WhatsApp chegam na Fase 4.
 > Detalhes em [PROJECT_STATUS.md](PROJECT_STATUS.md).
 
 ## Princípios

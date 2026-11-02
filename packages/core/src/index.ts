@@ -7,3 +7,4 @@ export * from './scheduling/availability';
 export * from './nlp/normalize-pt';
 export * from './nlp/temporal-pt';
 export * from './speech/pt-br';
+export * from './persona';
