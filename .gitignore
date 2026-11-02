@@ -1,0 +1,36 @@
+# dependências
+node_modules/
+.pnpm-store/
+
+# builds
+dist/
+.next/
+out/
+build/
+*.tsbuildinfo
+.turbo/
+
+# ambiente e segredos — NUNCA versionar
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# testes e cobertura
+coverage/
+test-results/
+playwright-report/
+
+# sistema / editores
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# next
+next-env.d.ts

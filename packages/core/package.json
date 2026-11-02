@@ -1,0 +1,24 @@
+{
+  "name": "@barber-voice/core",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Regras de domínio puras do Barber Voice: agenda, disponibilidade, datas em PT-BR, fala e telefone.",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "libphonenumber-js": "1.13.15",
+    "luxon": "3.7.2"
+  },
+  "devDependencies": {
+    "@types/luxon": "3.7.6",
+    "@types/node": "22.20.5",
+    "typescript": "6.0.3",
+    "vitest": "4.1.12"
+  }
+}

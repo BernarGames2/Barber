@@ -1,0 +1,10 @@
+packages:
+  - apps/*
+  - packages/*
+
+# pnpm 10 bloqueia scripts de instalação por padrão (proteção de supply chain).
+# Liberamos apenas os pacotes que precisam baixar/validar binários nativos.
+onlyBuiltDependencies:
+  - esbuild
+  - sharp
+  - unrs-resolver

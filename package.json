@@ -1,0 +1,28 @@
+{
+  "name": "barber-voice",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Barber Voice — plataforma SaaS de recepcionistas de IA para barbearias e salões de beleza",
+  "packageManager": "pnpm@10.28.0",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "dev": "turbo run dev --parallel --filter=@barber-voice/api --filter=@barber-voice/web",
+    "build": "turbo run build",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test --concurrency=1",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "db:bootstrap": "pnpm --filter @barber-voice/db bootstrap",
+    "db:generate": "pnpm --filter @barber-voice/db generate",
+    "db:migrate": "pnpm --filter @barber-voice/db migrate",
+    "db:seed": "pnpm --filter @barber-voice/db seed",
+    "db:seed:demo": "pnpm --filter @barber-voice/db seed:demo"
+  },
+  "devDependencies": {
+    "prettier": "3.9.10",
+    "turbo": "2.11.10",
+    "typescript": "6.0.3"
+  }
+}
