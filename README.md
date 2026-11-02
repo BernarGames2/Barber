@@ -98,3 +98,4 @@ impressos no log da API.
 - [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) — implantação: servidor único econômico (`deploy/`), Vercel com serviços (`vercel.json`) ou contêineres
 - [docs/INTEGRATIONS.md](docs/INTEGRATIONS.md) — contas externas, credenciais e custos
 - [docs/VOICE_STUDIO.md](docs/VOICE_STUDIO.md) — projeto do sistema de personagens
+- [docs/VALIDACAO_MERCADO.md](docs/VALIDACAO_MERCADO.md) — roteiro para validar o produto com 30 barbearias reais
