@@ -33,7 +33,8 @@ Prefira conversa por áudio/ligação ou presencial com o **dono ou gerente** �
 1. Hoje, como os clientes marcam horário? (WhatsApp, ligação, app, ordem de chegada)
 2. Quem responde as mensagens e ligações? Dá conta enquanto está cortando?
 3. Numa semana normal, mais ou menos quantas mensagens/ligações ficam sem resposta ou são respondidas tarde?
-4. Usa algum sistema de agenda? Qual e quanto paga por mês? (ex.: Booksy, Trinks, AppBarber, agenda de papel)
+4. Usa algum sistema de agenda ou atendimento automático no WhatsApp? Qual, quanto paga por mês e o que ele não
+   resolve? (ex.: Booksy, Trinks, AppBarber, robô de WhatsApp, agenda de papel)
 5. Quantos clientes faltam sem avisar por semana?
 
 **Apresentando a ideia (30 segundos):**
@@ -59,23 +60,26 @@ desses" para não induzir a resposta.
 ```
 Oi, pessoal da {nome}! Tudo bem?
 
-Estou criando uma ferramenta para barbearias e queria ouvir quem está no dia a dia. Não é venda. Se puderem
-responder (pode ser por áudio, do jeito que for mais fácil), ajuda muito:
+Esta mensagem é para o dono ou para quem cuida da agenda. Estou criando uma ferramenta para barbearias e queria
+ouvir quem está no dia a dia. Não é venda. Se puderem responder (pode ser por áudio), ajuda muito:
 
 1. Hoje os clientes marcam horário como? (WhatsApp, ligação, app, ordem de chegada)
 2. Quem responde as mensagens e ligações? Dá conta enquanto está cortando?
-3. Numa semana normal, mais ou menos quantas mensagens ou ligações ficam sem resposta ou são respondidas tarde?
-4. Vocês usam algum sistema de agenda? Qual, e quanto pagam por mês?
+3. Numa semana normal, quantas mensagens ou ligações ficam sem resposta ou são respondidas tarde?
+4. Vocês usam algum sistema de agenda ou atendimento automático no WhatsApp? Qual, quanto pagam por mês e o que
+   ele não resolve?
 5. Quantos clientes faltam sem avisar por semana?
 6. Imagina uma recepcionista virtual que responde no WhatsApp e no telefone da própria barbearia, 24 horas, só
-   oferece horários que estão livres na agenda, confirma, remarca, cancela e manda lembrete. Isso ajudaria vocês?
-   O que deixaria vocês com receio?
+   oferece horários livres da agenda, confirma, remarca, cancela e manda lembrete. Isso ajudaria? O que deixaria
+   vocês com receio?
 7. Ela deveria atender sempre ou só quando a equipe não consegue?
-8. Quanto pagariam por mês por isso: R$ 99, R$ 149 ou R$ 299 (com ligações incluídas)? Ou nenhum desses?
+8. Quanto pagariam por mês por isso: R$ 99, R$ 149 ou R$ 299 (com ligações)? Ou nenhum desses?
 9. Quando estiver pronta, topariam testar 30 dias grátis, sem cartão?
 
 Muito obrigado!
 ```
+
+Na 1ª rodada, a mensagem não pedia o dono e a pergunta 4 não citava atendimento automático.
 
 Envie no máximo **10 por dia**, em horário comercial: muitas mensagens seguidas para números fora dos contatos
 podem fazer o WhatsApp restringir a conta.
@@ -94,12 +98,44 @@ podem fazer o WhatsApp restringir a conta.
 - **Para falar com pessoas:** ligação (quem atende é gente; o roteiro funciona igual) e visita presencial em
   horário vazio (manhã de terça a quinta) rendem respostas mais confiáveis que mensagem.
 - **Pergunta extra para quem já automatiza:** "O que vocês usam hoje no WhatsApp? O que ele não resolve? Quanto
-  pagam?"
+  pagam?" (entrou na pergunta 4 a partir da 2ª rodada)
+
+### 2ª rodada (02/11/2026)
+
+- **Amostra:** 30 barbearias novas, nenhuma repetida da 1ª rodada, tiradas de guias de empresas (Bendito Guia,
+  Solutudo, Kupi) e não de sistemas de agendamento; mais barbearias pequenas e de cidades do interior. Sudeste 9,
+  Sul 7, Nordeste 8, Centro-Oeste 5, Norte 1. Os guias quase não trazem telefone de barbearias do Norte: complete a
+  região com Google Maps ou Instagram. Os números não foram confirmados, e 8 cadastros mostravam "Fechado" no
+  momento da consulta.
+- **Ordem de contato:** 1) ligação, com a abertura abaixo; 2) se ninguém atender, a mensagem do WhatsApp, que já
+  pede o dono; 3) se só vier resposta automática, esperar 1–2 dias e pedir o dono na mesma conversa.
+- **Registro:** cada contato tem um status (não contatada, contatada sem resposta, só resposta automática, pessoa
+  respondeu, não quis responder, número errado), o tipo de resposta automática (mensagem fixa, link de
+  agendamento, menu de opções, IA que conversa) e as 9 respostas. Só "pessoa respondeu" conta nos critérios da
+  seção 5.
+- A lista e as respostas ficam numa página privada fora do repositório: os telefones das barbearias não são
+  versionados.
+
+Abertura por ligação (depois, as mesmas 9 perguntas):
+
+> Oi, tudo bem? Falo com o dono ou com quem cuida da agenda? Meu nome é \_\_\_. Estou criando uma ferramenta para
+> barbearias e queria fazer umas perguntas rápidas, uns 5 minutos. Não é venda. Pode ser agora, ou prefere que eu
+> ligue em outro horário?
+
+Se cair na caixa postal, não deixe recado: tente outro dia ou mande a mensagem.
+
+Pedido para falar com o dono, depois de uma resposta automática:
+
+> Oi! Acho que quem me respondeu foi a mensagem automática de vocês. Consigo falar rapidinho com o dono ou com
+> quem cuida da agenda? É uma pesquisa de 5 minutos sobre a rotina da barbearia, não é venda, e pode ser por
+> áudio. Obrigado!
 
 ## 4. Planilha de registro
 
-Use o modelo [`validacao-mercado-modelo.csv`](validacao-mercado-modelo.csv) (abre no Excel ou Google Planilhas).
-Anote as respostas **com as palavras da pessoa** e registre também quem **não quis responder** — isso também é dado.
+Use o modelo [`validacao-mercado-modelo.csv`](validacao-mercado-modelo.csv) (abre no Excel ou Google Planilhas)
+quando não usar a página da pesquisa. Anote as respostas **com as palavras da pessoa** e registre também quem
+**não quis responder**: isso também é dado. Resposta automática vai nas colunas `resposta_automatica` e
+`sistema_resposta_automatica`, nunca nas respostas da pesquisa.
 
 ## 5. Critérios de decisão (definidos antes de ouvir as respostas)
 

@@ -206,6 +206,19 @@ premissas em [docs/INTEGRATIONS.md](docs/INTEGRATIONS.md#custos)). O custo por m
 pela IA (telefonia + reconhecimento de fala + modelo + síntese de voz) é o principal fator de margem; as
 franquias dos planos (`packages/db/src/seed-plans.ts`) foram definidas de forma conservadora até essa validação.
 
+## Validação de mercado (em andamento)
+
+Roteiro e critérios de decisão em [docs/VALIDACAO_MERCADO.md](docs/VALIDACAO_MERCADO.md). A lista de contatos e
+as respostas ficam numa página privada, fora do repositório.
+
+- **1ª rodada (30 barbearias, só WhatsApp):** todas as respostas vieram de atendimento automático, e nenhuma
+  pessoa respondeu ainda. Não conta como resultado, mas mostra que parte das barbearias já automatiza o primeiro
+  contato.
+- **2ª rodada (30 outras barbearias, preparada em 02/11/2026):** ligação primeiro e mensagem pedindo o dono;
+  menos barbearias vindas de sistemas de agendamento, mais pequenas e do interior. O Norte rendeu 1 contato nos
+  guias públicos e precisa ser completado à mão.
+- **Nenhum critério de decisão foi medido ainda** (0 respostas de pessoas).
+
 ## Próximas etapas
 
 1. **Ativar e medir a recepcionista com um modelo real** — **requer sua autorização** (gera custo por uso):
