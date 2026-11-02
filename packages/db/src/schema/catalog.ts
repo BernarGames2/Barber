@@ -150,7 +150,10 @@ export const professionalServices = pgTable(
       columns: [t.tenantId, t.serviceId],
       foreignColumns: [services.tenantId, services.id],
     }).onDelete('cascade'),
-    check('professional_services_duration_range', sql`${t.durationMin} IS NULL OR ${t.durationMin} BETWEEN 5 AND 720`),
+    check(
+      'professional_services_duration_range',
+      sql`${t.durationMin} IS NULL OR ${t.durationMin} BETWEEN 5 AND 720`,
+    ),
     check('professional_services_price_positive', sql`${t.priceCents} IS NULL OR ${t.priceCents} >= 0`),
   ],
 );

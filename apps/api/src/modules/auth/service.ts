@@ -100,9 +100,16 @@ export function createAuthService(deps: AppDeps) {
     createSession,
 
     async signup(input: SignupInput, meta: RequestMeta) {
-      const existing = await db.select({ id: users.id }).from(users).where(eq(users.email, input.email)).limit(1);
+      const existing = await db
+        .select({ id: users.id })
+        .from(users)
+        .where(eq(users.email, input.email))
+        .limit(1);
       if (existing[0]) {
-        throw Errors.conflict('EMAIL_IN_USE', 'Já existe uma conta com este e-mail. Entre ou recupere sua senha.');
+        throw Errors.conflict(
+          'EMAIL_IN_USE',
+          'Já existe uma conta com este e-mail. Entre ou recupere sua senha.',
+        );
       }
       const passwordHash = await hashPassword(input.password);
       const now = clock();
@@ -110,12 +117,21 @@ export function createAuthService(deps: AppDeps) {
       try {
         const [row] = await db
           .insert(users)
-          .values({ email: input.email, name: input.name, passwordHash, passwordChangedAt: now, createdAt: now })
+          .values({
+            email: input.email,
+            name: input.name,
+            passwordHash,
+            passwordChangedAt: now,
+            createdAt: now,
+          })
           .returning();
         user = row!;
       } catch (err) {
         if (pgErrorCode(err) === PG_ERROR.UNIQUE_VIOLATION) {
-          throw Errors.conflict('EMAIL_IN_USE', 'Já existe uma conta com este e-mail. Entre ou recupere sua senha.');
+          throw Errors.conflict(
+            'EMAIL_IN_USE',
+            'Já existe uma conta com este e-mail. Entre ou recupere sua senha.',
+          );
         }
         throw err;
       }
@@ -166,7 +182,10 @@ export function createAuthService(deps: AppDeps) {
         }
         throw invalidCredentials();
       }
-      await db.update(users).set({ failedLoginCount: 0, lockedUntil: null, lastLoginAt: now }).where(eq(users.id, user.id));
+      await db
+        .update(users)
+        .set({ failedLoginCount: 0, lockedUntil: null, lastLoginAt: now })
+        .where(eq(users.id, user.id));
       await audit(db, { tenantId: null, actorUserId: user.id, action: 'auth.login', ...meta });
       const session = await createSession(user.id, meta);
       return { userId: user.id, session };
@@ -227,7 +246,13 @@ export function createAuthService(deps: AppDeps) {
         })
         .from(memberships)
         .innerJoin(tenants, eq(tenants.id, memberships.tenantId))
-        .where(and(eq(memberships.userId, userId), eq(memberships.status, 'ACTIVE'), ne(tenants.status, 'CANCELLED')))
+        .where(
+          and(
+            eq(memberships.userId, userId),
+            eq(memberships.status, 'ACTIVE'),
+            ne(tenants.status, 'CANCELLED'),
+          ),
+        )
         .orderBy(asc(tenants.createdAt));
       return {
         user: {
@@ -262,7 +287,12 @@ export function createAuthService(deps: AppDeps) {
         .limit(1);
       if (recent && now.getTime() - recent.createdAt.getTime() < MINUTE) return; // evita bombardeio de e-mails
       const token = await issueToken(user.id, 'PASSWORD_RESET', RESET_TTL_MS);
-      await audit(db, { tenantId: null, actorUserId: user.id, action: 'auth.password_reset_requested', ...meta });
+      await audit(db, {
+        tenantId: null,
+        actorUserId: user.id,
+        action: 'auth.password_reset_requested',
+        ...meta,
+      });
       await mailer.send({
         kind: 'password_reset',
         to: user.email,
@@ -273,14 +303,23 @@ export function createAuthService(deps: AppDeps) {
 
     async resetPassword(token: string, newPassword: string, meta: RequestMeta) {
       const userId = await consumeToken(token, 'PASSWORD_RESET');
-      if (!userId) throw new AppError(400, 'INVALID_TOKEN', 'Link inválido ou expirado. Solicite uma nova redefinição.');
+      if (!userId)
+        throw new AppError(400, 'INVALID_TOKEN', 'Link inválido ou expirado. Solicite uma nova redefinição.');
       const now = clock();
       await db
         .update(users)
-        .set({ passwordHash: await hashPassword(newPassword), passwordChangedAt: now, failedLoginCount: 0, lockedUntil: null })
+        .set({
+          passwordHash: await hashPassword(newPassword),
+          passwordChangedAt: now,
+          failedLoginCount: 0,
+          lockedUntil: null,
+        })
         .where(eq(users.id, userId));
       // encerra todas as sessões: quem tinha a senha antiga perde o acesso
-      await db.update(sessions).set({ revokedAt: now }).where(and(eq(sessions.userId, userId), isNull(sessions.revokedAt)));
+      await db
+        .update(sessions)
+        .set({ revokedAt: now })
+        .where(and(eq(sessions.userId, userId), isNull(sessions.revokedAt)));
       await audit(db, { tenantId: null, actorUserId: userId, action: 'auth.password_reset', ...meta });
     },
 
@@ -290,11 +329,16 @@ export function createAuthService(deps: AppDeps) {
         throw new AppError(400, 'INVALID_PASSWORD', 'Senha atual incorreta.');
       }
       const now = clock();
-      await db.update(users).set({ passwordHash: await hashPassword(next), passwordChangedAt: now }).where(eq(users.id, user.id));
+      await db
+        .update(users)
+        .set({ passwordHash: await hashPassword(next), passwordChangedAt: now })
+        .where(eq(users.id, user.id));
       await db
         .update(sessions)
         .set({ revokedAt: now })
-        .where(and(eq(sessions.userId, user.id), isNull(sessions.revokedAt), ne(sessions.id, auth.sessionId)));
+        .where(
+          and(eq(sessions.userId, user.id), isNull(sessions.revokedAt), ne(sessions.id, auth.sessionId)),
+        );
       await audit(db, { tenantId: null, actorUserId: user.id, action: 'auth.password_changed', ...meta });
     },
 

@@ -1,5 +1,15 @@
 import { sql } from 'drizzle-orm';
-import { boolean, check, index, integer, pgTable, text, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
+import {
+  boolean,
+  check,
+  index,
+  integer,
+  pgTable,
+  text,
+  timestamp,
+  uniqueIndex,
+  uuid,
+} from 'drizzle-orm/pg-core';
 import { createdAt, pk, tz, updatedAt } from './_shared';
 import { users } from './auth';
 import { businessCategoryEnum, memberRoleEnum, membershipStatusEnum, tenantStatusEnum } from './enums';
@@ -93,7 +103,10 @@ export const memberships = pgTable(
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },
-  (t) => [uniqueIndex('memberships_tenant_user_key').on(t.tenantId, t.userId), index('memberships_user_idx').on(t.userId)],
+  (t) => [
+    uniqueIndex('memberships_tenant_user_key').on(t.tenantId, t.userId),
+    index('memberships_user_idx').on(t.userId),
+  ],
 );
 
 /** Convites para a equipe. Token guardado como hash; aceite exige login com o e-mail convidado. */
@@ -113,5 +126,8 @@ export const invitations = pgTable(
     revokedAt: timestamp('revoked_at', tz),
     createdAt: createdAt(),
   },
-  (t) => [uniqueIndex('invitations_token_hash_key').on(t.tokenHash), index('invitations_tenant_idx').on(t.tenantId)],
+  (t) => [
+    uniqueIndex('invitations_token_hash_key').on(t.tokenHash),
+    index('invitations_tenant_idx').on(t.tenantId),
+  ],
 );

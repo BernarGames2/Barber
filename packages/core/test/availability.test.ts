@@ -28,7 +28,15 @@ const BUSINESS: WeeklyInterval[] = [
 ];
 
 function prof(id: string, over: Partial<ProfessionalScheduleInput> = {}): ProfessionalScheduleInput {
-  return { professionalId: id, workingHours: null, timeOff: [], busy: [], durationMin: 30, bufferAfterMin: 0, ...over };
+  return {
+    professionalId: id,
+    workingHours: null,
+    timeOff: [],
+    busy: [],
+    durationMin: 30,
+    bufferAfterMin: 0,
+    ...over,
+  };
 }
 
 function request(over: Partial<AvailabilityRequest> = {}): AvailabilityRequest {
@@ -64,7 +72,9 @@ describe('computeAvailability', () => {
   it('não oferece horários em domingos (fechado) nem além do limite de dias', () => {
     const sunday = computeAvailability(request({ fromDate: '2026-11-08', toDate: '2026-11-08' }));
     expect(sunday).toHaveLength(0);
-    const far = computeAvailability(request({ fromDate: '2026-12-20', toDate: '2026-12-31', maxDaysAhead: 30 }));
+    const far = computeAvailability(
+      request({ fromDate: '2026-12-20', toDate: '2026-12-31', maxDaysAhead: 30 }),
+    );
     expect(far).toHaveLength(0);
   });
 
@@ -115,7 +125,11 @@ describe('computeAvailability', () => {
 
   it('o buffer pode ultrapassar o fechamento (último atendimento termina às 19:00)', () => {
     const slots = computeAvailability(
-      request({ fromDate: '2026-11-03', toDate: '2026-11-03', professionals: [prof('A', { bufferAfterMin: 15 })] }),
+      request({
+        fromDate: '2026-11-03',
+        toDate: '2026-11-03',
+        professionals: [prof('A', { bufferAfterMin: 15 })],
+      }),
     );
     expect(startsFor(slots, 'A').at(-1)).toBe('18:30');
   });
@@ -142,7 +156,10 @@ describe('computeAvailability', () => {
     const monday = computeAvailability(request({ professionals: [B] }));
     expect(monday).toHaveLength(0); // B não trabalha às segundas
 
-    const tue = startsFor(computeAvailability(request({ fromDate: '2026-11-03', toDate: '2026-11-03', professionals: [B] })), 'B');
+    const tue = startsFor(
+      computeAvailability(request({ fromDate: '2026-11-03', toDate: '2026-11-03', professionals: [B] })),
+      'B',
+    );
     expect(tue).toContain('11:30');
     expect(tue).not.toContain('12:00'); // almoço
     expect(tue).not.toContain('12:30');
@@ -150,7 +167,10 @@ describe('computeAvailability', () => {
     expect(tue.at(-1)).toBe('17:30');
 
     // sábado: estabelecimento fecha às 14:00, então a tarde de B é cortada
-    const sat = startsFor(computeAvailability(request({ fromDate: '2026-11-07', toDate: '2026-11-07', professionals: [B] })), 'B');
+    const sat = startsFor(
+      computeAvailability(request({ fromDate: '2026-11-07', toDate: '2026-11-07', professionals: [B] })),
+      'B',
+    );
     expect(sat.at(-1)).toBe('13:30');
     expect(sat).not.toContain('14:00');
   });
@@ -183,11 +203,18 @@ describe('computeAvailability', () => {
       request({
         fromDate: '2026-11-03',
         toDate: '2026-11-03',
-        professionals: [prof('A', { busy: [{ start: at('2026-11-03', '09:00'), end: at('2026-11-03', '19:00') }] }), prof('B')],
+        professionals: [
+          prof('A', { busy: [{ start: at('2026-11-03', '09:00'), end: at('2026-11-03', '19:00') }] }),
+          prof('B'),
+        ],
       }),
     );
     expect(new Set(slots.map((s) => s.professionalId))).toEqual(new Set(['B']));
-    const grouped = groupSlotsByStart(computeAvailability(request({ fromDate: '2026-11-03', toDate: '2026-11-03', professionals: [prof('A'), prof('B')] })));
+    const grouped = groupSlotsByStart(
+      computeAvailability(
+        request({ fromDate: '2026-11-03', toDate: '2026-11-03', professionals: [prof('A'), prof('B')] }),
+      ),
+    );
     expect(grouped[0]!.options.map((o) => o.professionalId)).toEqual(['A', 'B']);
     expect(grouped.every((g, i) => i === 0 || g.start > grouped[i - 1]!.start)).toBe(true);
   });
@@ -259,7 +286,9 @@ describe('validateSlot', () => {
     expect(validateSlot({ ...base, professional: B, start: at('2026-11-03', '12:15') })).toMatchObject({
       reason: 'OUTSIDE_WORKING_HOURS',
     });
-    const off = prof('A', { timeOff: [{ start: at('2026-11-03', '15:00'), end: at('2026-11-03', '16:00') }] });
+    const off = prof('A', {
+      timeOff: [{ start: at('2026-11-03', '15:00'), end: at('2026-11-03', '16:00') }],
+    });
     expect(validateSlot({ ...base, professional: off, start: at('2026-11-03', '14:45') })).toMatchObject({
       reason: 'TIME_OFF',
     });
@@ -268,15 +297,23 @@ describe('validateSlot', () => {
       reason: 'CONFLICT',
     });
     // buffer do novo atendimento invade o próximo
-    const withBuffer = prof('A', { bufferAfterMin: 10, busy: [{ start: at('2026-11-03', '15:00'), end: at('2026-11-03', '15:30') }] });
-    expect(validateSlot({ ...base, professional: withBuffer, start: at('2026-11-03', '14:30') })).toMatchObject({
+    const withBuffer = prof('A', {
+      bufferAfterMin: 10,
+      busy: [{ start: at('2026-11-03', '15:00'), end: at('2026-11-03', '15:30') }],
+    });
+    expect(
+      validateSlot({ ...base, professional: withBuffer, start: at('2026-11-03', '14:30') }),
+    ).toMatchObject({
       reason: 'CONFLICT',
     });
   });
 
   it('encaixe deliberado (ignoreConflicts) só ignora conflito, não o horário', () => {
     const busy = prof('A', { busy: [{ start: at('2026-11-03', '15:00'), end: at('2026-11-03', '15:40') }] });
-    expect(validateSlot({ ...base, professional: busy, start: at('2026-11-03', '15:20'), ignoreConflicts: true }).ok).toBe(true);
+    expect(
+      validateSlot({ ...base, professional: busy, start: at('2026-11-03', '15:20'), ignoreConflicts: true })
+        .ok,
+    ).toBe(true);
     expect(
       validateSlot({ ...base, professional: busy, start: at('2026-11-08', '15:20'), ignoreConflicts: true }),
     ).toMatchObject({ reason: 'CLOSED' });
@@ -293,7 +330,13 @@ describe('validateSlot', () => {
   });
 
   it('rejeita duração inválida', () => {
-    expect(validateSlot({ ...base, professional: prof('A', { durationMin: 0 }), start: at('2026-11-03', '10:00') })).toMatchObject({
+    expect(
+      validateSlot({
+        ...base,
+        professional: prof('A', { durationMin: 0 }),
+        start: at('2026-11-03', '10:00'),
+      }),
+    ).toMatchObject({
       reason: 'INVALID_DURATION',
     });
   });
@@ -323,17 +366,29 @@ describe('propriedades do motor (fuzz com 300 cenários aleatórios)', () => {
       for (let k = 0; k < Math.floor(rand() * 6); k++) {
         const startMin = 9 * 60 + Math.floor(rand() * 40) * 15 + (rand() < 0.3 ? 5 : 0);
         const len = 15 + Math.floor(rand() * 6) * 10;
-        const s = at(date, `${String(Math.floor(startMin / 60)).padStart(2, '0')}:${String(startMin % 60).padStart(2, '0')}`);
+        const s = at(
+          date,
+          `${String(Math.floor(startMin / 60)).padStart(2, '0')}:${String(startMin % 60).padStart(2, '0')}`,
+        );
         busy.push({ start: s, end: s + len * MINUTE_MS });
       }
       const timeOff = rand() < 0.4 ? [{ start: at(date, '12:00'), end: at(date, '13:00') }] : [];
       const professional = prof('P', { durationMin, bufferAfterMin, busy, timeOff });
-      const req = request({ fromDate: date, toDate: date, slotIntervalMin, professionals: [professional], includeBackToBack: false });
+      const req = request({
+        fromDate: date,
+        toDate: date,
+        slotIntervalMin,
+        professionals: [professional],
+        includeBackToBack: false,
+      });
 
       const computed = new Set(computeAvailability(req).map((s) => s.start));
       const brute = new Set<number>();
       for (let m = 0; m < 24 * 60; m += slotIntervalMin) {
-        const start = at(date, `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`);
+        const start = at(
+          date,
+          `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`,
+        );
         const v = validateSlot({ ...req, professional, start });
         if (v.ok) brute.add(start);
       }

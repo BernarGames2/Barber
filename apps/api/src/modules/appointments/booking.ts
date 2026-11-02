@@ -185,13 +185,21 @@ function validateFor(
 }
 
 /** Profissionais aptos e livres no instante pedido, na ordem de distribuição. */
-async function freeProfessionalsAt(ctx: ServiceContext, req: BookingRequest, startMs: number, opts: BookingOptions) {
+async function freeProfessionalsAt(
+  ctx: ServiceContext,
+  req: BookingRequest,
+  startMs: number,
+  opts: BookingOptions,
+) {
   const now = ctx.deps.clock();
   return withTenant(ctx.deps.db, ctx.tenant.id, async (tx) => {
     const svc = await resolveServices(tx, req.serviceIds, { forAi: opts.forAi ?? false });
     const eligible = await eligibleProfessionals(tx, svc, undefined, { forAi: opts.forAi ?? false });
     if (eligible.length === 0) {
-      throw Errors.unprocessable('NO_PROFESSIONAL_FOR_SERVICE', 'Nenhum profissional realiza o(s) serviço(s) escolhido(s).');
+      throw Errors.unprocessable(
+        'NO_PROFESSIONAL_FOR_SERVICE',
+        'Nenhum profissional realiza o(s) serviço(s) escolhido(s).',
+      );
     }
     const date = instantToLocal(startMs, ctx.tenant.timezone).date;
     const dayStart = new Date(startOfLocalDay(date, ctx.tenant.timezone));
@@ -202,7 +210,9 @@ async function freeProfessionalsAt(ctx: ServiceContext, req: BookingRequest, sta
       to: new Date(Math.max(dayEnd.getTime(), startMs + DAY_MS)),
       now,
     });
-    const free = eligible.filter((p) => validateFor(ctx, req, p, data, startMs, now, opts.customerFacing ?? false).ok);
+    const free = eligible.filter(
+      (p) => validateFor(ctx, req, p, data, startMs, now, opts.customerFacing ?? false).ok,
+    );
     const load = Object.fromEntries(
       free.map((p) => [
         p.id,
@@ -241,7 +251,10 @@ async function bookWithProfessional(
     const svc = await resolveServices(tx, req.serviceIds, { forAi: opts.forAi ?? false });
     const [prof] = await eligibleProfessionals(tx, svc, professionalId, { forAi: opts.forAi ?? false });
     if (!prof) {
-      throw Errors.unprocessable('PROFESSIONAL_CANNOT_PERFORM', 'Este profissional não realiza o(s) serviço(s) escolhido(s).');
+      throw Errors.unprocessable(
+        'PROFESSIONAL_CANNOT_PERFORM',
+        'Este profissional não realiza o(s) serviço(s) escolhido(s).',
+      );
     }
 
     // 1) serializa a agenda do profissional  2) libera reservas temporárias vencidas
@@ -299,7 +312,10 @@ async function bookWithProfessional(
     } catch (err) {
       const code = pgErrorCode(err);
       if (code === PG_ERROR.EXCLUSION_VIOLATION) throw new SlotUnavailableError('CONFLICT');
-      if (code === PG_ERROR.UNIQUE_VIOLATION && pgConstraintName(err) === 'appointments_tenant_idempotency_key') {
+      if (
+        code === PG_ERROR.UNIQUE_VIOLATION &&
+        pgConstraintName(err) === 'appointments_tenant_idempotency_key'
+      ) {
         throw new IdempotencyCollision();
       }
       throw err;
@@ -361,13 +377,18 @@ export async function createAppointment(
     if (replay) return { appointment: replay, replayed: true };
   }
 
-  const candidates = req.professionalId ? [req.professionalId] : await freeProfessionalsAt(ctx, req, startMs, opts);
+  const candidates = req.professionalId
+    ? [req.professionalId]
+    : await freeProfessionalsAt(ctx, req, startMs, opts);
   if (candidates.length === 0) throw new SlotUnavailableError('NO_PROFESSIONAL_AVAILABLE');
 
   let lastError: unknown = null;
   for (const professionalId of candidates.slice(0, 5)) {
     try {
-      return { appointment: await bookWithProfessional(ctx, req, professionalId, startMs, key, opts), replayed: false };
+      return {
+        appointment: await bookWithProfessional(ctx, req, professionalId, startMs, key, opts),
+        replayed: false,
+      };
     } catch (err) {
       // mesma chave já gravada por uma requisição concorrente: devolve a reserva original
       if (key && (err instanceof IdempotencyCollision || err instanceof SlotUnavailableError)) {
@@ -401,7 +422,9 @@ export async function cancelAppointment(
   return withTenant(ctx.deps.db, ctx.tenant.id, async (tx) => {
     const a = await lockAppointment(tx, id);
     if (!(CANCELLABLE as readonly string[]).includes(a.status)) {
-      throw Errors.conflict('INVALID_STATUS_TRANSITION', 'Este agendamento não pode mais ser cancelado.', { status: a.status });
+      throw Errors.conflict('INVALID_STATUS_TRANSITION', 'Este agendamento não pode mais ser cancelado.', {
+        status: a.status,
+      });
     }
     const now = ctx.deps.clock();
     await tx
@@ -441,7 +464,12 @@ export async function cancelAppointment(
 export async function rescheduleAppointment(
   ctx: ServiceContext,
   id: string,
-  input: { startsAt: string; professionalId?: string | undefined; isOverbook?: boolean; allowOutsideHours?: boolean },
+  input: {
+    startsAt: string;
+    professionalId?: string | undefined;
+    isOverbook?: boolean;
+    allowOutsideHours?: boolean;
+  },
   opts: { customerFacing?: boolean; forAi?: boolean } = {},
 ): Promise<AppointmentDto> {
   if (opts.forAi && (input.isOverbook || input.allowOutsideHours)) throw Errors.forbidden();
@@ -452,7 +480,9 @@ export async function rescheduleAppointment(
   return withTenant(ctx.deps.db, ctx.tenant.id, async (tx) => {
     const old = await lockAppointment(tx, id);
     if (!(CANCELLABLE as readonly string[]).includes(old.status)) {
-      throw Errors.conflict('INVALID_STATUS_TRANSITION', 'Este agendamento não pode ser remarcado.', { status: old.status });
+      throw Errors.conflict('INVALID_STATUS_TRANSITION', 'Este agendamento não pode ser remarcado.', {
+        status: old.status,
+      });
     }
     const items = await tx
       .select()
@@ -466,10 +496,15 @@ export async function rescheduleAppointment(
       { forAi: opts.forAi ?? false },
     );
     const [prof] = await eligibleProfessionals(tx, svc, targetProfessionalId, { forAi: opts.forAi ?? false });
-    if (!prof) throw Errors.unprocessable('PROFESSIONAL_CANNOT_PERFORM', 'Este profissional não realiza estes serviços.');
+    if (!prof)
+      throw Errors.unprocessable(
+        'PROFESSIONAL_CANNOT_PERFORM',
+        'Este profissional não realiza estes serviços.',
+      );
 
     // locks em ordem determinística evitam deadlock entre remarcações cruzadas
-    for (const pid of [...new Set([old.professionalId, prof.id])].sort()) await lockProfessionalSchedule(tx, pid);
+    for (const pid of [...new Set([old.professionalId, prof.id])].sort())
+      await lockProfessionalSchedule(tx, pid);
     const now = ctx.deps.clock();
     await expireStaleHolds(tx, prof.id, now);
 
@@ -581,11 +616,17 @@ export async function updateAppointmentStatus(
   return withTenant(ctx.deps.db, ctx.tenant.id, async (tx) => {
     const a = await lockAppointment(tx, id);
     if (!TRANSITIONS[status].includes(a.status)) {
-      throw Errors.conflict('INVALID_STATUS_TRANSITION', 'Mudança de status não permitida.', { from: a.status, to: status });
+      throw Errors.conflict('INVALID_STATUS_TRANSITION', 'Mudança de status não permitida.', {
+        from: a.status,
+        to: status,
+      });
     }
     const now = ctx.deps.clock();
     if ((status === 'COMPLETED' || status === 'NO_SHOW') && a.startsAt.getTime() > now.getTime()) {
-      throw Errors.conflict('APPOINTMENT_NOT_STARTED', 'Só é possível concluir ou marcar falta após o horário de início.');
+      throw Errors.conflict(
+        'APPOINTMENT_NOT_STARTED',
+        'Só é possível concluir ou marcar falta após o horário de início.',
+      );
     }
     await tx
       .update(appointments)
@@ -630,7 +671,13 @@ export async function updateAppointmentStatus(
 
 export async function listAppointments(
   ctx: ServiceContext,
-  filter: { from: string; to: string; professionalId?: string | undefined; customerId?: string | undefined; includeCancelled: boolean },
+  filter: {
+    from: string;
+    to: string;
+    professionalId?: string | undefined;
+    customerId?: string | undefined;
+    includeCancelled: boolean;
+  },
 ): Promise<AppointmentDto[]> {
   const tz = ctx.tenant.timezone;
   const from = new Date(startOfLocalDay(filter.from, tz));
@@ -671,12 +718,21 @@ export async function getAppointment(ctx: ServiceContext, id: string): Promise<A
   });
 }
 
-export async function updateAppointmentNotes(ctx: ServiceContext, id: string, notes: string | null): Promise<AppointmentDto> {
+export async function updateAppointmentNotes(
+  ctx: ServiceContext,
+  id: string,
+  notes: string | null,
+): Promise<AppointmentDto> {
   return withTenant(ctx.deps.db, ctx.tenant.id, async (tx) => {
     const updated = await tx
       .update(appointments)
       .set({ notes })
-      .where(and(eq(appointments.id, id), inArray(appointments.status, ['HELD', 'PENDING', 'CONFIRMED', 'COMPLETED', 'NO_SHOW'])))
+      .where(
+        and(
+          eq(appointments.id, id),
+          inArray(appointments.status, ['HELD', 'PENDING', 'CONFIRMED', 'COMPLETED', 'NO_SHOW']),
+        ),
+      )
       .returning({ id: appointments.id });
     if (!updated[0]) throw Errors.notFound('Agendamento');
     return (await loadAppointmentDtos(tx, [id]))[0]!;

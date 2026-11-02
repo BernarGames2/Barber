@@ -79,14 +79,22 @@ export async function createTenant(
     .from(memberships)
     .where(and(eq(memberships.userId, auth.userId), eq(memberships.role, 'OWNER')));
   if ((owned?.n ?? 0) >= MAX_OWNED_TENANTS) {
-    throw Errors.unprocessable('TENANT_LIMIT', 'Limite de estabelecimentos por conta atingido. Fale com o suporte.');
+    throw Errors.unprocessable(
+      'TENANT_LIMIT',
+      'Limite de estabelecimentos por conta atingido. Fale com o suporte.',
+    );
   }
   const [trial] = await db.select().from(plans).where(eq(plans.code, 'TRIAL')).limit(1);
   if (!trial) throw new Error('Plano TRIAL ausente: execute o seed de planos (pnpm db:seed).');
 
   const base = slugify(input.name) || 'estabelecimento';
   for (let attempt = 0; attempt < 5; attempt++) {
-    const slug = `${base}-${randomToken(4).toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 5) || 'x1'}`.replace(/^-/, '');
+    const slug = `${base}-${
+      randomToken(4)
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, '')
+        .slice(0, 5) || 'x1'
+    }`.replace(/^-/, '');
     const tenantId = uuidv7();
     try {
       return await withTenant(db, tenantId, async (tx) => {
@@ -138,11 +146,16 @@ export async function createTenant(
         return toTenantDto(tenant!);
       });
     } catch (err) {
-      if (pgErrorCode(err) === PG_ERROR.UNIQUE_VIOLATION && pgConstraintName(err) === 'tenants_slug_key') continue;
+      if (pgErrorCode(err) === PG_ERROR.UNIQUE_VIOLATION && pgConstraintName(err) === 'tenants_slug_key')
+        continue;
       throw err;
     }
   }
-  throw new AppError(500, 'SLUG_GENERATION_FAILED', 'Não foi possível criar o estabelecimento. Tente novamente.');
+  throw new AppError(
+    500,
+    'SLUG_GENERATION_FAILED',
+    'Não foi possível criar o estabelecimento. Tente novamente.',
+  );
 }
 
 export async function getTenant(ctx: ServiceContext): Promise<TenantDto> {
@@ -176,13 +189,23 @@ export async function getBusinessHours(ctx: ServiceContext): Promise<WeeklyInter
   return rows.map((r) => ({ weekday: r.weekday, start: hhmm(r.startTime), end: hhmm(r.endTime) }));
 }
 
-export async function setBusinessHours(ctx: ServiceContext, intervals: WeeklyIntervalDto[]): Promise<WeeklyIntervalDto[]> {
+export async function setBusinessHours(
+  ctx: ServiceContext,
+  intervals: WeeklyIntervalDto[],
+): Promise<WeeklyIntervalDto[]> {
   await withTenant(ctx.deps.db, ctx.tenant.id, async (tx) => {
     await tx.delete(businessHours).where(eq(businessHours.tenantId, ctx.tenant.id));
     if (intervals.length) {
-      await tx.insert(businessHours).values(
-        intervals.map((i) => ({ tenantId: ctx.tenant.id, weekday: i.weekday, startTime: i.start, endTime: i.end })),
-      );
+      await tx
+        .insert(businessHours)
+        .values(
+          intervals.map((i) => ({
+            tenantId: ctx.tenant.id,
+            weekday: i.weekday,
+            startTime: i.start,
+            endTime: i.end,
+          })),
+        );
     }
     await audit(tx, {
       tenantId: ctx.tenant.id,
@@ -249,7 +272,10 @@ export async function createClosure(
 
 export async function deleteClosure(ctx: ServiceContext, closureId: string): Promise<void> {
   await withTenant(ctx.deps.db, ctx.tenant.id, async (tx) => {
-    const deleted = await tx.delete(closures).where(eq(closures.id, closureId)).returning({ id: closures.id });
+    const deleted = await tx
+      .delete(closures)
+      .where(eq(closures.id, closureId))
+      .returning({ id: closures.id });
     if (!deleted[0]) throw Errors.notFound('Fechamento');
     await audit(tx, {
       tenantId: ctx.tenant.id,
@@ -306,7 +332,9 @@ export async function completeOnboarding(ctx: ServiceContext): Promise<TenantDto
   const status = await getOnboardingStatus(ctx);
   if (!status.canComplete) {
     const missing = status.steps.filter((s) => s.required && !s.done).map((s) => s.key);
-    throw Errors.unprocessable('ONBOARDING_INCOMPLETE', 'Ainda faltam etapas obrigatórias da configuração.', { missing });
+    throw Errors.unprocessable('ONBOARDING_INCOMPLETE', 'Ainda faltam etapas obrigatórias da configuração.', {
+      missing,
+    });
   }
   return withTenant(ctx.deps.db, ctx.tenant.id, async (tx) => {
     const [t] = await tx
@@ -318,7 +346,12 @@ export async function completeOnboarding(ctx: ServiceContext): Promise<TenantDto
       })
       .where(eq(tenants.id, ctx.tenant.id))
       .returning();
-    await audit(tx, { tenantId: ctx.tenant.id, actorUserId: ctx.actor.userId, action: 'onboarding.completed', ...ctx.meta });
+    await audit(tx, {
+      tenantId: ctx.tenant.id,
+      actorUserId: ctx.actor.userId,
+      action: 'onboarding.completed',
+      ...ctx.meta,
+    });
     return toTenantDto(t!);
   });
 }

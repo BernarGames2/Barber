@@ -23,12 +23,18 @@ if (process.env.NODE_ENV === 'production') {
 
 function parse(url: string | undefined, fallbackUser: string, fallbackPass: string) {
   const u = new URL(url ?? `postgres://${fallbackUser}:${fallbackPass}@localhost:5432/barber_voice`);
-  return { user: decodeURIComponent(u.username), password: decodeURIComponent(u.password), database: u.pathname.slice(1) };
+  return {
+    user: decodeURIComponent(u.username),
+    password: decodeURIComponent(u.password),
+    database: u.pathname.slice(1),
+  };
 }
 
 const owner = parse(process.env.DATABASE_ADMIN_URL, 'barber_owner', 'barber_owner_dev');
 const app = parse(process.env.DATABASE_URL, 'barber_app', 'barber_app_dev');
-const testDb = parse(process.env.TEST_DATABASE_ADMIN_URL, 'barber_owner', 'barber_owner_dev').database || 'barber_voice_test';
+const testDb =
+  parse(process.env.TEST_DATABASE_ADMIN_URL, 'barber_owner', 'barber_owner_dev').database ||
+  'barber_voice_test';
 
 const ident = (s: string) => {
   if (!/^[a-z_][a-z0-9_]*$/.test(s)) throw new Error(`Identificador inválido: ${s}`);

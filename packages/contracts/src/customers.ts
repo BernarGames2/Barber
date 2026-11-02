@@ -1,5 +1,12 @@
 import { z } from 'zod';
-import { localDateSchema, nameSchema, optionalEmailSchema, optionalPhoneSchema, optionalText, uuidSchema } from './common';
+import {
+  localDateSchema,
+  nameSchema,
+  optionalEmailSchema,
+  optionalPhoneSchema,
+  optionalText,
+  uuidSchema,
+} from './common';
 
 export const customerInputSchema = z.object({
   name: nameSchema('Nome', 120),
@@ -35,7 +42,12 @@ export const customerListQuerySchema = z.object({
   offset: z.coerce.number().int().min(0).max(1_000_000).default(0),
 });
 
-export const CONSENT_PURPOSES = ['WHATSAPP_TRANSACTIONAL', 'WHATSAPP_MARKETING', 'CALL_RECORDING', 'DATA_PROCESSING'] as const;
+export const CONSENT_PURPOSES = [
+  'WHATSAPP_TRANSACTIONAL',
+  'WHATSAPP_MARKETING',
+  'CALL_RECORDING',
+  'DATA_PROCESSING',
+] as const;
 export type ConsentPurpose = (typeof CONSENT_PURPOSES)[number];
 
 export const consentInputSchema = z.object({

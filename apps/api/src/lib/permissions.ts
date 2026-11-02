@@ -40,7 +40,13 @@ const ALL: Permission[] = [
 const MATRIX: Record<MemberRole, ReadonlySet<Permission>> = {
   OWNER: new Set(ALL),
   MANAGER: new Set(ALL.filter((p) => p !== 'billing:manage' && p !== 'members:manage')),
-  STAFF: new Set<Permission>(['tenant:read', 'appointments:write', 'customers:read', 'customers:write', 'dashboard:read']),
+  STAFF: new Set<Permission>([
+    'tenant:read',
+    'appointments:write',
+    'customers:read',
+    'customers:write',
+    'dashboard:read',
+  ]),
 };
 
 export function can(role: MemberRole | null | undefined, permission: Permission): boolean {

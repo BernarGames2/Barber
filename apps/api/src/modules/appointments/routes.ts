@@ -22,7 +22,8 @@ import {
   updateAppointmentStatus,
 } from './booking';
 
-const appointmentId = (params: unknown) => uuidParam((params as { appointmentId?: string }).appointmentId, 'Agendamento');
+const appointmentId = (params: unknown) =>
+  uuidParam((params as { appointmentId?: string }).appointmentId, 'Agendamento');
 
 export function appointmentRoutes(app: FastifyInstance) {
   app.get('/availability', async (request) => {
@@ -63,7 +64,11 @@ export function appointmentRoutes(app: FastifyInstance) {
 
   app.post('/appointments/:appointmentId/reschedule', async (request) => {
     const ctx = serviceContext(request, 'appointments:write');
-    return rescheduleAppointment(ctx, appointmentId(request.params), parse(rescheduleAppointmentSchema, request.body));
+    return rescheduleAppointment(
+      ctx,
+      appointmentId(request.params),
+      parse(rescheduleAppointmentSchema, request.body),
+    );
   });
 
   app.post('/appointments/:appointmentId/status', async (request) => {

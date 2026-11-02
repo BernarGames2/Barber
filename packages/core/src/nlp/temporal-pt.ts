@@ -92,7 +92,12 @@ export const PERIOD_LABELS: readonly PeriodLabel[] = [
     to: '10:00',
     label: 'início da manhã',
   },
-  { re: /\b(?:fim da manha|final da manha|finalzinho da manha)\b/, from: '10:30', to: '12:00', label: 'fim da manhã' },
+  {
+    re: /\b(?:fim da manha|final da manha|finalzinho da manha)\b/,
+    from: '10:30',
+    to: '12:00',
+    label: 'fim da manhã',
+  },
   {
     re: /\b(?:depois do almoco|apos o almoco|pos almoco|depois de almocar|depois que eu almocar)\b/,
     from: '13:00',
@@ -138,7 +143,12 @@ export const PERIOD_LABELS: readonly PeriodLabel[] = [
     to: '18:00',
     label: 'tarde',
   },
-  { re: /\b(?:a noitinha|noitinha|a noite|de noite|pela noite|noite)\b/, from: '18:00', to: '23:00', label: 'noite' },
+  {
+    re: /\b(?:a noitinha|noitinha|a noite|de noite|pela noite|noite)\b/,
+    from: '18:00',
+    to: '23:00',
+    label: 'noite',
+  },
 ];
 
 const FIRST_AVAILABLE_RE =
@@ -177,7 +187,9 @@ function parseTimeToken(raw: string): ParsedTime | null {
   if ((m = /^meia noite(?: e (meia))?$/.exec(tok))) {
     return { hour: 0, minute: m[1] ? 30 : 0, period: null, hasMarker: true };
   }
-  if ((m = /^(\d{1,2}) (?:para|pras|pra) (?:as |a )?(\d{1,2})h?(?: (?:da|de) (manha|tarde|noite))?$/.exec(tok))) {
+  if (
+    (m = /^(\d{1,2}) (?:para|pras|pra) (?:as |a )?(\d{1,2})h?(?: (?:da|de) (manha|tarde|noite))?$/.exec(tok))
+  ) {
     const before = Number(m[1]);
     const target = Number(m[2]);
     if (before <= 0 || before >= 60 || target > 23 || target === 0) return null;
@@ -202,10 +214,15 @@ function parseTimeToken(raw: string): ParsedTime | null {
 }
 
 /** Resolve manhã/tarde e devolve os candidatos em minutos do dia. */
-function resolveClock(p: ParsedTime, plausible: { from: number; to: number }, hint: PeriodLabel | null): number[] {
+function resolveClock(
+  p: ParsedTime,
+  plausible: { from: number; to: number },
+  hint: PeriodLabel | null,
+): number[] {
   const { hour, minute, period } = p;
   if (period === 'tarde') return [(hour >= 1 && hour <= 11 ? hour + 12 : hour) * 60 + minute];
-  if (period === 'noite') return [(hour === 12 ? 0 : hour >= 1 && hour <= 11 ? hour + 12 : hour) * 60 + minute];
+  if (period === 'noite')
+    return [(hour === 12 ? 0 : hour >= 1 && hour <= 11 ? hour + 12 : hour) * 60 + minute];
   if (period === 'manha' || period === 'madrugada') return [hour * 60 + minute];
   if (hour >= 12 || hour === 0) return [hour * 60 + minute];
 
@@ -518,7 +535,9 @@ export function resolveTemporalExpression(input: string, ctx: TemporalContext): 
       if (d === today && !/essa|esta|nessa|nesta|dessa|desta/.test(qual)) {
         const far = addDays(today, 7);
         res.dateCandidates.push(today, far);
-        res.ambiguities.push(`Hoje já é ${formatLongDatePt(today).split(',')[0]}: confirmar se é hoje ou ${formatLongDatePt(far)}.`);
+        res.ambiguities.push(
+          `Hoje já é ${formatLongDatePt(today).split(',')[0]}: confirmar se é hoje ou ${formatLongDatePt(far)}.`,
+        );
       }
     },
   );
@@ -529,12 +548,15 @@ export function resolveTemporalExpression(input: string, ctx: TemporalContext): 
   consume(/\b(?:ainda )?(?:nessa|nesta|essa|esta) semana\b/, () => {
     ranges.push({ from: today, to: addDays(today, 7 - weekdayOf(today)) });
   });
-  consume(/\b(?:no |neste |nesse |este |esse )?(?:fim de semana|final de semana|fds)(?: (que vem))?\b/, (g) => {
-    const wd = weekdayOf(today);
-    let sat = wd === 6 ? today : wd === 7 ? addDays(today, -1) : nextOccurrence(today, 6, true);
-    if (g[1] && wd >= 6) sat = addDays(sat, 7);
-    ranges.push({ from: sat < today ? today : sat, to: addDays(sat, 1) });
-  });
+  consume(
+    /\b(?:no |neste |nesse |este |esse )?(?:fim de semana|final de semana|fds)(?: (que vem))?\b/,
+    (g) => {
+      const wd = weekdayOf(today);
+      let sat = wd === 6 ? today : wd === 7 ? addDays(today, -1) : nextOccurrence(today, 6, true);
+      if (g[1] && wd >= 6) sat = addDays(sat, 7);
+      ranges.push({ from: sat < today ? today : sat, to: addDays(sat, 1) });
+    },
+  );
   consume(/\b(?:mes que vem|proximo mes)\b/, () => {
     const nx = DateTime.fromISO(today, { zone: 'UTC' }).plus({ months: 1 });
     ranges.push({ from: nx.startOf('month').toISODate()!, to: nx.endOf('month').toISODate()! });
@@ -574,11 +596,16 @@ export function resolveTemporalExpression(input: string, ctx: TemporalContext): 
       res.dates = { from: finalPoints[0]!, to: finalPoints[finalPoints.length - 1]! };
       res.dateCandidates = [...res.dateCandidates, ...finalPoints];
       if (!joinedByOr) {
-        res.ambiguities.push(`Foram citadas datas diferentes (${finalPoints.map(formatLongDatePt).join(' / ')}).`);
+        res.ambiguities.push(
+          `Foram citadas datas diferentes (${finalPoints.map(formatLongDatePt).join(' / ')}).`,
+        );
       }
     }
   } else if (ranges.length > 0) {
-    const from = ranges.map((r) => r.from).sort().at(-1)!;
+    const from = ranges
+      .map((r) => r.from)
+      .sort()
+      .at(-1)!;
     const to = ranges.map((r) => r.to).sort()[0]!;
     res.dates = from <= to ? { from, to } : { from: ranges[0]!.from, to: ranges[0]!.to };
   }

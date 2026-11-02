@@ -55,13 +55,21 @@ export async function getDashboardSummary(ctx: ServiceContext, date?: string): P
         weekBookedMin: sql<number>`COALESCE(sum(${appointments.totalDurationMin}) FILTER (WHERE ${appointments.startsAt} >= ${ts(weekStart)} AND ${appointments.startsAt} < ${ts(weekEnd)} AND ${appointments.status} IN ('PENDING','CONFIRMED','COMPLETED') AND NOT ${appointments.isOverbook}), 0)::int`,
       })
       .from(appointments)
-      .where(and(gte(appointments.startsAt, new Date(rangeStart)), lt(appointments.startsAt, new Date(rangeEnd))));
+      .where(
+        and(gte(appointments.startsAt, new Date(rangeStart)), lt(appointments.startsAt, new Date(rangeEnd))),
+      );
 
     const [custTotal] = await tx.select({ n: count() }).from(customers).where(isNull(customers.anonymizedAt));
     const [custNew] = await tx
       .select({ n: count() })
       .from(customers)
-      .where(and(isNull(customers.anonymizedAt), gte(customers.createdAt, new Date(monthStart)), lt(customers.createdAt, new Date(monthEnd))));
+      .where(
+        and(
+          isNull(customers.anonymizedAt),
+          gte(customers.createdAt, new Date(monthStart)),
+          lt(customers.createdAt, new Date(monthEnd)),
+        ),
+      );
     const returning = await tx.execute<{ n: number }>(sql`
       SELECT count(DISTINCT a.customer_id)::int AS n
       FROM appointments a
@@ -160,7 +168,11 @@ export async function getDashboardSummary(ctx: ServiceContext, date?: string): P
         weekRate: availableMin > 0 ? Math.min(1, (agg?.weekBookedMin ?? 0) / availableMin) : null,
       },
       topServices: topServices.rows.map((r) => ({ serviceId: r.service_id, name: r.name, count: r.n })),
-      topProfessionals: topProfessionals.rows.map((r) => ({ professionalId: r.professional_id, name: r.name, count: r.n })),
+      topProfessionals: topProfessionals.rows.map((r) => ({
+        professionalId: r.professional_id,
+        name: r.name,
+        count: r.n,
+      })),
       busiestHours: busiest.rows.map((r) => ({ hour: r.hour, count: r.n })),
       // Telefonia e WhatsApp ainda não integrados (Fase 4): sem números fictícios.
       channels: { phone: null, whatsapp: null },

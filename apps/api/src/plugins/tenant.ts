@@ -31,12 +31,22 @@ export async function resolveTenant(request: FastifyRequest): Promise<void> {
     })
     .from(memberships)
     .innerJoin(tenants, eq(tenants.id, memberships.tenantId))
-    .where(and(eq(memberships.userId, auth.userId), eq(memberships.tenantId, tenantId), eq(memberships.status, 'ACTIVE')))
+    .where(
+      and(
+        eq(memberships.userId, auth.userId),
+        eq(memberships.tenantId, tenantId),
+        eq(memberships.status, 'ACTIVE'),
+      ),
+    )
     .limit(1);
 
   if (!row || row.status === 'CANCELLED') throw Errors.notFound('Estabelecimento');
   if (row.status === 'SUSPENDED' && request.method !== 'GET') {
-    throw new AppError(403, 'TENANT_SUSPENDED', 'Esta conta está suspensa. Fale com o suporte do Barber Voice.');
+    throw new AppError(
+      403,
+      'TENANT_SUSPENDED',
+      'Esta conta está suspensa. Fale com o suporte do Barber Voice.',
+    );
   }
   const { role, ...tenant } = row;
   request.tenantCtx = { tenantId: row.id, role, tenant };

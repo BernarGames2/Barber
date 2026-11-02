@@ -43,7 +43,9 @@ export function authRoutes(app: FastifyInstance, auth: AuthService) {
   app.post('/v1/auth/password/forgot', { config: strict(5) }, async (request, reply) => {
     const { email } = parse(forgotPasswordSchema, request.body);
     await auth.requestPasswordReset(email, requestMeta(request));
-    return reply.status(202).send({ ok: true, message: 'Se o e-mail estiver cadastrado, enviaremos as instruções.' });
+    return reply
+      .status(202)
+      .send({ ok: true, message: 'Se o e-mail estiver cadastrado, enviaremos as instruções.' });
   });
 
   app.post('/v1/auth/password/reset', { config: strict(10) }, async (request, reply) => {

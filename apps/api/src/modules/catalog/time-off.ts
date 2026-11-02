@@ -52,7 +52,13 @@ export async function listTimeOff(
  */
 export async function createTimeOff(
   ctx: ServiceContext,
-  input: { professionalId: string; kind: TimeOffRow['kind']; reason?: string | null | undefined; startsAt: string; endsAt: string },
+  input: {
+    professionalId: string;
+    kind: TimeOffRow['kind'];
+    reason?: string | null | undefined;
+    startsAt: string;
+    endsAt: string;
+  },
   force: boolean,
 ): Promise<TimeOffDto> {
   const startsAt = new Date(input.startsAt);
@@ -80,9 +86,17 @@ export async function createTimeOff(
       )
       .orderBy(asc(appointments.startsAt));
     if (conflicts.length && !force) {
-      throw Errors.conflict('TIME_OFF_CONFLICTS', 'Há agendamentos neste período. Remarque-os ou confirme o bloqueio mesmo assim.', {
-        appointments: conflicts.map((c) => ({ id: c.id, startsAt: c.startsAt.toISOString(), customerName: c.customerName })),
-      });
+      throw Errors.conflict(
+        'TIME_OFF_CONFLICTS',
+        'Há agendamentos neste período. Remarque-os ou confirme o bloqueio mesmo assim.',
+        {
+          appointments: conflicts.map((c) => ({
+            id: c.id,
+            startsAt: c.startsAt.toISOString(),
+            customerName: c.customerName,
+          })),
+        },
+      );
     }
 
     const [row] = await tx

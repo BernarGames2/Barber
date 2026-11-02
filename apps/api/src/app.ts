@@ -34,12 +34,21 @@ function parseTrustProxy(value: string): boolean | string[] {
     .filter(Boolean);
 }
 
-export async function buildApp(deps: Omit<AppDeps, 'mailer'> & { mailer?: Mailer }, options: BuildOptions = {}) {
+export async function buildApp(
+  deps: Omit<AppDeps, 'mailer'> & { mailer?: Mailer },
+  options: BuildOptions = {},
+) {
   const app = Fastify({
     logger: options.logger ?? {
       level: deps.config.LOG_LEVEL,
       redact: {
-        paths: ['req.headers.cookie', 'req.headers.authorization', 'res.headers["set-cookie"]', '*.password', '*.token'],
+        paths: [
+          'req.headers.cookie',
+          'req.headers.authorization',
+          'res.headers["set-cookie"]',
+          '*.password',
+          '*.token',
+        ],
         censor: '[REDACTED]',
       },
     },
@@ -50,7 +59,10 @@ export async function buildApp(deps: Omit<AppDeps, 'mailer'> & { mailer?: Mailer
     routerOptions: { ignoreTrailingSlash: true },
   });
 
-  const fullDeps: AppDeps = { ...deps, mailer: deps.mailer ?? new ConsoleMailer(app.log, deps.config.NODE_ENV === 'production') };
+  const fullDeps: AppDeps = {
+    ...deps,
+    mailer: deps.mailer ?? new ConsoleMailer(app.log, deps.config.NODE_ENV === 'production'),
+  };
   app.decorate('deps', fullDeps);
   app.setErrorHandler(errorHandler);
   app.setNotFoundHandler((_request, reply) =>

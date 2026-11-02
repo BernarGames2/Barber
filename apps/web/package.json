@@ -1,0 +1,38 @@
+{
+  "name": "@barber-voice/web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Painel web do Barber Voice (Next.js): onboarding, agenda, CRM, Voice Studio e administração.",
+  "scripts": {
+    "dev": "next dev --port 3000",
+    "build": "next build",
+    "start": "next start --port 3000",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@barber-voice/contracts": "workspace:*",
+    "@barber-voice/core": "workspace:*",
+    "@fontsource/instrument-serif": "5.3.0",
+    "@tanstack/react-query": "5.105.1",
+    "clsx": "2.1.1",
+    "geist": "1.9.0",
+    "lucide-react": "1.66.0",
+    "luxon": "3.7.2",
+    "next": "16.4.3",
+    "radix-ui": "1.8.1",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "sonner": "2.0.8",
+    "tailwind-merge": "3.7.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "4.3.3",
+    "@types/luxon": "3.7.6",
+    "@types/node": "22.20.5",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "tailwindcss": "4.3.3",
+    "typescript": "6.0.3"
+  }
+}

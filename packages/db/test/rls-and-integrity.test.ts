@@ -25,7 +25,12 @@ async function createTenant(name: string): Promise<string> {
   const [org] = await admin.db.insert(organizations).values({ name }).returning();
   const [t] = await admin.db
     .insert(tenants)
-    .values({ organizationId: org!.id, slug: `${name.toLowerCase()}-${uuidv7().slice(-8)}`, name, category: 'BARBERSHOP' })
+    .values({
+      organizationId: org!.id,
+      slug: `${name.toLowerCase()}-${uuidv7().slice(-8)}`,
+      name,
+      category: 'BARBERSHOP',
+    })
     .returning();
   return t!.id;
 }
@@ -54,11 +59,17 @@ beforeAll(async () => {
     return p!.id;
   });
   custA = await withTenant(app.db, tenantA, async (tx) => {
-    const [c] = await tx.insert(customers).values({ tenantId: tenantA, name: 'Cliente A', phone: '+5511911110000' }).returning();
+    const [c] = await tx
+      .insert(customers)
+      .values({ tenantId: tenantA, name: 'Cliente A', phone: '+5511911110000' })
+      .returning();
     return c!.id;
   });
   custB = await withTenant(app.db, tenantB, async (tx) => {
-    const [c] = await tx.insert(customers).values({ tenantId: tenantB, name: 'Cliente B', phone: '+5511922220000' }).returning();
+    const [c] = await tx
+      .insert(customers)
+      .values({ tenantId: tenantB, name: 'Cliente B', phone: '+5511922220000' })
+      .returning();
     return c!.id;
   });
 });
@@ -90,7 +101,9 @@ describe('Row-Level Security (papel da aplicação)', () => {
 
   it('não permite gravar linha em nome de outro estabelecimento', async () => {
     await expectPgError(
-      withTenant(app.db, tenantA, (tx) => tx.insert(customers).values({ tenantId: tenantB, name: 'Invasor' })),
+      withTenant(app.db, tenantA, (tx) =>
+        tx.insert(customers).values({ tenantId: tenantB, name: 'Invasor' }),
+      ),
       PG_ERROR.INSUFFICIENT_PRIVILEGE,
     );
   });
@@ -187,7 +200,11 @@ describe('agenda: exclusion constraint anticonflito', () => {
   });
 
   it('agendamentos cancelados, faltas e encaixes deliberados não bloqueiam', async () => {
-    const slot = { startsAt: T('2030-01-09T13:00:00Z'), endsAt: T('2030-01-09T13:30:00Z'), blockedUntil: T('2030-01-09T13:30:00Z') };
+    const slot = {
+      startsAt: T('2030-01-09T13:00:00Z'),
+      endsAt: T('2030-01-09T13:30:00Z'),
+      blockedUntil: T('2030-01-09T13:30:00Z'),
+    };
     await withTenant(app.db, tenantA, async (tx) => {
       await tx.insert(appointments).values({ ...base(), ...slot, status: 'CANCELLED' });
       await tx.insert(appointments).values({ ...base(), ...slot, status: 'NO_SHOW' });
@@ -198,7 +215,9 @@ describe('agenda: exclusion constraint anticonflito', () => {
       tx
         .select()
         .from(appointments)
-        .where(sql`${appointments.startsAt} = ${slot.startsAt.toISOString()}::timestamptz AND ${appointments.status} = 'CONFIRMED'`),
+        .where(
+          sql`${appointments.startsAt} = ${slot.startsAt.toISOString()}::timestamptz AND ${appointments.status} = 'CONFIRMED'`,
+        ),
     );
     expect(active).toHaveLength(2);
   });
@@ -284,7 +303,10 @@ describe('permissões do papel da aplicação', () => {
       }),
       PG_ERROR.INSUFFICIENT_PRIVILEGE,
     );
-    await expectPgError(app.pool.query('SELECT * FROM drizzle.__drizzle_migrations'), PG_ERROR.INSUFFICIENT_PRIVILEGE);
+    await expectPgError(
+      app.pool.query('SELECT * FROM drizzle.__drizzle_migrations'),
+      PG_ERROR.INSUFFICIENT_PRIVILEGE,
+    );
   });
 
   it('o papel da aplicação não tem BYPASSRLS nem é superusuário', async () => {

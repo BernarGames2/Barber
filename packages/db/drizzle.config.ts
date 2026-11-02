@@ -8,7 +8,9 @@ export default defineConfig({
   schema: './src/schema/index.ts',
   out: './migrations',
   dbCredentials: {
-    url: process.env.DATABASE_ADMIN_URL ?? 'postgres://barber_owner:barber_owner_dev@localhost:5432/barber_voice',
+    url:
+      process.env.DATABASE_ADMIN_URL ??
+      'postgres://barber_owner:barber_owner_dev@localhost:5432/barber_voice',
   },
   strict: true,
   verbose: true,

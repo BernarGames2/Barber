@@ -44,7 +44,9 @@ export const toCustomerDto = (c: CustomerRow): CustomerDto => ({
 const escapeLike = (s: string) => s.replace(/[\\%_]/g, (m) => `\\${m}`);
 
 function phoneConflict(err: unknown): boolean {
-  return pgErrorCode(err) === PG_ERROR.UNIQUE_VIOLATION && pgConstraintName(err) === 'customers_tenant_phone_key';
+  return (
+    pgErrorCode(err) === PG_ERROR.UNIQUE_VIOLATION && pgConstraintName(err) === 'customers_tenant_phone_key'
+  );
 }
 
 async function existingByPhone(tx: Tx, phone: string) {
@@ -58,11 +60,18 @@ async function existingByPhone(tx: Tx, phone: string) {
 
 async function assertProfessional(tx: Tx, id: string | null | undefined) {
   if (!id) return;
-  const [p] = await tx.select({ id: professionals.id }).from(professionals).where(eq(professionals.id, id)).limit(1);
+  const [p] = await tx
+    .select({ id: professionals.id })
+    .from(professionals)
+    .where(eq(professionals.id, id))
+    .limit(1);
   if (!p) throw Errors.unprocessable('INVALID_PROFESSIONAL', 'Profissional preferido inválido.');
 }
 
-export async function listCustomers(ctx: ServiceContext, query: { q?: string | undefined; limit: number; offset: number }) {
+export async function listCustomers(
+  ctx: ServiceContext,
+  query: { q?: string | undefined; limit: number; offset: number },
+) {
   return withTenant(ctx.deps.db, ctx.tenant.id, async (tx) => {
     const q = query.q?.trim();
     const digits = q?.replace(/\D/g, '') ?? '';
@@ -97,7 +106,12 @@ async function currentConsents(tx: Tx, customerId: string): Promise<ConsentState
     .from(consents)
     .where(eq(consents.customerId, customerId))
     .orderBy(consents.purpose, desc(consents.createdAt));
-  return rows.map((r) => ({ purpose: r.purpose, granted: r.granted, channel: r.channel, recordedAt: r.createdAt.toISOString() }));
+  return rows.map((r) => ({
+    purpose: r.purpose,
+    granted: r.granted,
+    channel: r.channel,
+    recordedAt: r.createdAt.toISOString(),
+  }));
 }
 
 export async function getCustomer(ctx: ServiceContext, customerId: string) {
@@ -131,9 +145,13 @@ export async function createCustomer(
       if (input.phone) {
         const dup = await existingByPhone(tx, input.phone);
         if (dup) {
-          throw Errors.conflict('CUSTOMER_PHONE_EXISTS', `Já existe um cliente com este telefone (${dup.name}).`, {
-            customerId: dup.id,
-          });
+          throw Errors.conflict(
+            'CUSTOMER_PHONE_EXISTS',
+            `Já existe um cliente com este telefone (${dup.name}).`,
+            {
+              customerId: dup.id,
+            },
+          );
         }
       }
       await assertProfessional(tx, input.preferredProfessionalId);
@@ -165,7 +183,8 @@ export async function createCustomer(
       return toCustomerDto(c!);
     });
   } catch (err) {
-    if (phoneConflict(err)) throw Errors.conflict('CUSTOMER_PHONE_EXISTS', 'Já existe um cliente com este telefone.');
+    if (phoneConflict(err))
+      throw Errors.conflict('CUSTOMER_PHONE_EXISTS', 'Já existe um cliente com este telefone.');
     throw err;
   }
 }
@@ -195,7 +214,8 @@ export async function updateCustomer(
       return toCustomerDto(c!);
     });
   } catch (err) {
-    if (phoneConflict(err)) throw Errors.conflict('CUSTOMER_PHONE_EXISTS', 'Já existe um cliente com este telefone.');
+    if (phoneConflict(err))
+      throw Errors.conflict('CUSTOMER_PHONE_EXISTS', 'Já existe um cliente com este telefone.');
     throw err;
   }
 }
@@ -203,10 +223,19 @@ export async function updateCustomer(
 export async function recordConsent(
   ctx: ServiceContext,
   customerId: string,
-  input: { purpose: ConsentStateDto['purpose']; granted: boolean; channel: string; evidence?: string | null | undefined },
+  input: {
+    purpose: ConsentStateDto['purpose'];
+    granted: boolean;
+    channel: string;
+    evidence?: string | null | undefined;
+  },
 ): Promise<ConsentStateDto[]> {
   return withTenant(ctx.deps.db, ctx.tenant.id, async (tx) => {
-    const [c] = await tx.select({ id: customers.id, anonymizedAt: customers.anonymizedAt }).from(customers).where(eq(customers.id, customerId)).limit(1);
+    const [c] = await tx
+      .select({ id: customers.id, anonymizedAt: customers.anonymizedAt })
+      .from(customers)
+      .where(eq(customers.id, customerId))
+      .limit(1);
     if (!c || c.anonymizedAt) throw Errors.notFound('Cliente');
     await tx.insert(consents).values({
       tenantId: ctx.tenant.id,
@@ -249,7 +278,10 @@ export async function anonymizeCustomer(ctx: ServiceContext, customerId: string)
         ),
       );
     if ((upcoming?.n ?? 0) > 0) {
-      throw Errors.conflict('CUSTOMER_HAS_UPCOMING_APPOINTMENTS', 'Cancele os agendamentos futuros do cliente antes de anonimizar.');
+      throw Errors.conflict(
+        'CUSTOMER_HAS_UPCOMING_APPOINTMENTS',
+        'Cancele os agendamentos futuros do cliente antes de anonimizar.',
+      );
     }
     await tx
       .update(customers)

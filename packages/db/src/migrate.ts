@@ -37,12 +37,20 @@ export async function applyGrants(pool: pg.Pool, role: string): Promise<boolean>
 }
 
 export async function runMigrations(adminUrl: string, appRole: string, log: (m: string) => void = () => {}) {
-  const handle = createDb(adminUrl, { max: 1, applicationName: 'barber-voice-migrate', statementTimeoutMs: 120_000 });
+  const handle = createDb(adminUrl, {
+    max: 1,
+    applicationName: 'barber-voice-migrate',
+    statementTimeoutMs: 120_000,
+  });
   try {
     await migrate(handle.db, { migrationsFolder: MIGRATIONS_DIR });
     log('Migrações aplicadas.');
     const granted = await applyGrants(handle.pool, appRole);
-    log(granted ? `Permissões aplicadas ao papel "${appRole}".` : `Papel "${appRole}" não existe: permissões não aplicadas.`);
+    log(
+      granted
+        ? `Permissões aplicadas ao papel "${appRole}".`
+        : `Papel "${appRole}" não existe: permissões não aplicadas.`,
+    );
   } finally {
     await handle.close();
   }

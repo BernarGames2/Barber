@@ -172,15 +172,19 @@ export function computeAvailability(req: AvailabilityRequest): ProfessionalSlot[
         for (const s of starts) {
           if (s < earliest) continue;
           if (s < winFrom || s > winTo) continue;
-          out.push({ professionalId: prof.professionalId, start: s, end: s + durMs, blockedUntil: s + durMs + bufMs });
+          out.push({
+            professionalId: prof.professionalId,
+            start: s,
+            end: s + durMs,
+            blockedUntil: s + durMs + bufMs,
+          });
         }
       }
     }
   }
 
   return out.sort(
-    (a, b) =>
-      a.start - b.start || (order.get(a.professionalId) ?? 0) - (order.get(b.professionalId) ?? 0),
+    (a, b) => a.start - b.start || (order.get(a.professionalId) ?? 0) - (order.get(b.professionalId) ?? 0),
   );
 }
 

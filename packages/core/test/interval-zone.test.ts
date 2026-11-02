@@ -45,7 +45,11 @@ describe('fuso horário', () => {
   it('converte hora local de São Paulo (UTC-3) para UTC', () => {
     const ms = localToInstant('2026-11-02', '10:00', 'America/Sao_Paulo');
     expect(new Date(ms).toISOString()).toBe('2026-11-02T13:00:00.000Z');
-    expect(instantToLocal(ms, 'America/Sao_Paulo')).toMatchObject({ date: '2026-11-02', time: '10:00', weekday: 1 });
+    expect(instantToLocal(ms, 'America/Sao_Paulo')).toMatchObject({
+      date: '2026-11-02',
+      time: '10:00',
+      weekday: 1,
+    });
   });
 
   it('respeita fusos diferentes do Brasil', () => {
@@ -64,7 +68,12 @@ describe('fuso horário', () => {
   it('utilitários de data', () => {
     expect(addDays('2026-12-31', 1)).toBe('2027-01-01');
     expect(weekdayOf('2026-11-08')).toBe(7);
-    expect(eachDate('2026-02-27', '2026-03-02')).toEqual(['2026-02-27', '2026-02-28', '2026-03-01', '2026-03-02']);
+    expect(eachDate('2026-02-27', '2026-03-02')).toEqual([
+      '2026-02-27',
+      '2026-02-28',
+      '2026-03-01',
+      '2026-03-02',
+    ]);
     expect(isValidLocalDate('2026-02-29')).toBe(false);
     expect(isValidLocalDate('2028-02-29')).toBe(true);
     expect(isValidTimeZone('America/Sao_Paulo')).toBe(true);

@@ -28,6 +28,8 @@ export interface AvailabilityQuery {
   preferredProfessionalId?: string | null | undefined;
   /** Canal de IA: respeita "agendável pela IA" e a política do estabelecimento. */
   forAi?: boolean;
+  /** Remarcação: o próprio agendamento não ocupa a agenda nesta consulta. */
+  excludeAppointmentId?: string | undefined;
 }
 
 /**
@@ -35,7 +37,10 @@ export interface AvailabilityQuery {
  * antecedência mínima e o limite de dias valem como para o cliente (consistência
  * com o que a IA ofereceria); reservas manuais podem ignorá-los na criação.
  */
-export async function getAvailability(ctx: ServiceContext, q: AvailabilityQuery): Promise<AvailabilityResponse> {
+export async function getAvailability(
+  ctx: ServiceContext,
+  q: AvailabilityQuery,
+): Promise<AvailabilityResponse> {
   if (diffDays(q.from, q.to) > MAX_RANGE_DAYS) {
     throw Errors.unprocessable('RANGE_TOO_LARGE', `Consulte no máximo ${MAX_RANGE_DAYS} dias por vez.`);
   }
@@ -46,11 +51,20 @@ export async function getAvailability(ctx: ServiceContext, q: AvailabilityQuery)
     const svc = await resolveServices(tx, q.serviceIds, { forAi: q.forAi ?? false });
     const eligible = await eligibleProfessionals(tx, svc, q.professionalId, { forAi: q.forAi ?? false });
     if (q.professionalId && eligible.length === 0) {
-      throw Errors.unprocessable('PROFESSIONAL_CANNOT_PERFORM', 'Este profissional não realiza o(s) serviço(s) escolhido(s).');
+      throw Errors.unprocessable(
+        'PROFESSIONAL_CANNOT_PERFORM',
+        'Este profissional não realiza o(s) serviço(s) escolhido(s).',
+      );
     }
     const from = new Date(startOfLocalDay(q.from, tz));
     const to = new Date(startOfLocalDay(addDays(q.to, 1), tz) + LOOKAHEAD_MS);
-    const data = await loadSchedulingData(tx, { professionalIds: eligible.map((p) => p.id), from, to, now });
+    const data = await loadSchedulingData(tx, {
+      professionalIds: eligible.map((p) => p.id),
+      from,
+      to,
+      now,
+      ...(q.excludeAppointmentId ? { excludeAppointmentId: q.excludeAppointmentId } : {}),
+    });
 
     const inputs: ProfessionalScheduleInput[] = eligible.map((p) => {
       const sched = data.byProfessional.get(p.id) ?? { workingHours: null, timeOff: [], busy: [] };
@@ -97,7 +111,11 @@ export async function getAvailability(ctx: ServiceContext, q: AvailabilityQuery)
         const dayLoad = Object.fromEntries(ids.map((id) => [id, load.get(`${id}|${date}`) ?? 0]));
         const ranked = rankProfessionals(ids, dayLoad, q.preferredProfessionalId);
         const best = g.options.find((o) => o.professionalId === ranked[0])!;
-        return { start: new Date(g.start).toISOString(), end: new Date(best.end).toISOString(), professionalIds: ranked };
+        return {
+          start: new Date(g.start).toISOString(),
+          end: new Date(best.end).toISOString(),
+          professionalIds: ranked,
+        };
       }),
     };
   });

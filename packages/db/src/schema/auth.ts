@@ -61,5 +61,8 @@ export const authTokens = pgTable(
     usedAt: timestamp('used_at', tz),
     createdAt: createdAt(),
   },
-  (t) => [uniqueIndex('auth_tokens_token_hash_key').on(t.tokenHash), index('auth_tokens_user_idx').on(t.userId, t.type)],
+  (t) => [
+    uniqueIndex('auth_tokens_token_hash_key').on(t.tokenHash),
+    index('auth_tokens_user_idx').on(t.userId, t.type),
+  ],
 );

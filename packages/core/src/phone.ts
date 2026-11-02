@@ -3,7 +3,10 @@ import { parsePhoneNumberFromString, type CountryCode } from 'libphonenumber-js/
 /**
  * Normalização de telefones. Armazenamos sempre em E.164 (ex.: +5511987654321).
  */
-export function normalizePhone(input: string | null | undefined, defaultCountry: CountryCode = 'BR'): string | null {
+export function normalizePhone(
+  input: string | null | undefined,
+  defaultCountry: CountryCode = 'BR',
+): string | null {
   if (!input) return null;
   const trimmed = input.trim();
   if (!trimmed) return null;

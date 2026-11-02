@@ -27,8 +27,33 @@ export type BusinessCategory = (typeof BUSINESS_CATEGORIES)[number];
 export const businessCategorySchema = z.enum(BUSINESS_CATEGORIES, { error: 'Categoria inválida' });
 
 const UF = [
-  'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', 'MS', 'MG', 'PA',
-  'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO',
+  'AC',
+  'AL',
+  'AP',
+  'AM',
+  'BA',
+  'CE',
+  'DF',
+  'ES',
+  'GO',
+  'MA',
+  'MT',
+  'MS',
+  'MG',
+  'PA',
+  'PB',
+  'PR',
+  'PE',
+  'PI',
+  'RJ',
+  'RN',
+  'RS',
+  'RO',
+  'RR',
+  'SC',
+  'SP',
+  'SE',
+  'TO',
 ] as const;
 export const BRAZIL_STATES = UF;
 
@@ -83,7 +108,10 @@ export const updateTenantSchema = z
       .transform((v) => (v === '' ? null : v))
       .nullish(),
     timezone: timezoneSchema,
-    slotIntervalMin: z.number().int().refine((v) => [5, 10, 15, 20, 30, 45, 60].includes(v), 'Intervalo de grade inválido'),
+    slotIntervalMin: z
+      .number()
+      .int()
+      .refine((v) => [5, 10, 15, 20, 30, 45, 60].includes(v), 'Intervalo de grade inválido'),
     minBookingNoticeMin: z.number().int().min(0).max(10080),
     maxBookingDaysAhead: z.number().int().min(1).max(365),
     cancellationMinNoticeMin: z.number().int().min(0).max(10080),
@@ -112,9 +140,20 @@ export const closureInputSchema = z
     endsAt: instantSchema,
     allDay: z.boolean().default(true),
   })
-  .refine((v) => Date.parse(v.endsAt) > Date.parse(v.startsAt), { message: 'O fim deve ser depois do início', path: ['endsAt'] });
+  .refine((v) => Date.parse(v.endsAt) > Date.parse(v.startsAt), {
+    message: 'O fim deve ser depois do início',
+    path: ['endsAt'],
+  });
 
-export const ONBOARDING_STEPS = ['business', 'hours', 'services', 'professionals', 'channels', 'receptionist', 'review'] as const;
+export const ONBOARDING_STEPS = [
+  'business',
+  'hours',
+  'services',
+  'professionals',
+  'channels',
+  'receptionist',
+  'review',
+] as const;
 export type OnboardingStep = (typeof ONBOARDING_STEPS)[number];
 
 export interface TenantDto {

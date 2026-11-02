@@ -3,7 +3,9 @@ import { z } from 'zod';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-export const uuidSchema = z.string().regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i, 'ID inválido');
+export const uuidSchema = z
+  .string()
+  .regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i, 'ID inválido');
 
 export const emailSchema = z
   .string()
@@ -76,9 +78,14 @@ export const timezoneSchema = z.string().refine(isValidTimeZone, 'Fuso horário 
 /** Instante ISO 8601 com fuso (ex.: 2026-11-06T15:00:00-03:00). */
 export const instantSchema = z
   .string()
-  .refine((v) => /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:\d{2})$/.test(v) && !Number.isNaN(Date.parse(v)), {
-    message: 'Data/hora inválida (ISO 8601 com fuso)',
-  });
+  .refine(
+    (v) =>
+      /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:\d{2})$/.test(v) &&
+      !Number.isNaN(Date.parse(v)),
+    {
+      message: 'Data/hora inválida (ISO 8601 com fuso)',
+    },
+  );
 
 export const centsSchema = z.number().int('Valor em centavos deve ser inteiro').min(0).max(100_000_000);
 

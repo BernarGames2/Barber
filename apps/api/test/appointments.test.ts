@@ -63,11 +63,19 @@ describe('disponibilidade', () => {
 
   it('"qualquer profissional" junta as opções e só considera quem faz o serviço', async () => {
     const res = json(
-      await owner.get(`${shop.base}/availability?serviceIds=${shop.services.coloracao}&from=2026-11-03&to=2026-11-03`),
+      await owner.get(
+        `${shop.base}/availability?serviceIds=${shop.services.coloracao}&from=2026-11-03&to=2026-11-03`,
+      ),
     );
     for (const slot of res.slots) expect(slot.professionalIds).toEqual([shop.professionals.joao]);
-    const both = json(await owner.get(`${shop.base}/availability?serviceIds=${shop.services.corte}&from=2026-11-03&to=2026-11-03`));
-    const at11 = both.slots.find((s: { start: string }) => new Date(s.start).toISOString() === iso('2026-11-03', '11:00'));
+    const both = json(
+      await owner.get(
+        `${shop.base}/availability?serviceIds=${shop.services.corte}&from=2026-11-03&to=2026-11-03`,
+      ),
+    );
+    const at11 = both.slots.find(
+      (s: { start: string }) => new Date(s.start).toISOString() === iso('2026-11-03', '11:00'),
+    );
     expect(at11.professionalIds).toHaveLength(2);
   });
 
@@ -124,18 +132,40 @@ describe('criação de agendamentos', () => {
     expect(a.items.map((i: { serviceName: string }) => i.serviceName)).toEqual(['Corte', 'Barba']);
     expect(a.customer.phone).toBe('+5511999991111');
 
-    const list = json(await owner.get(`${shop.base}/appointments?from=2026-11-03&to=2026-11-03`)).appointments;
+    const list = json(
+      await owner.get(`${shop.base}/appointments?from=2026-11-03&to=2026-11-03`),
+    ).appointments;
     expect(list.map((x: { id: string }) => x.id)).toEqual([a.id]);
   });
 
   it('reutiliza o cliente existente pelo telefone (sem duplicar cadastro)', async () => {
-    const first = json(await book({ newCustomer: { name: 'Maria', phone: '11 98888-2222' }, professionalId: shop.professionals.joao, serviceIds: [shop.services.corte], startsAt: sp('2026-11-03', '10:00') }));
-    const second = json(await book({ newCustomer: { name: 'Maria S.', phone: '+55 11 98888-2222' }, professionalId: shop.professionals.joao, serviceIds: [shop.services.corte], startsAt: sp('2026-11-03', '11:00') }));
+    const first = json(
+      await book({
+        newCustomer: { name: 'Maria', phone: '11 98888-2222' },
+        professionalId: shop.professionals.joao,
+        serviceIds: [shop.services.corte],
+        startsAt: sp('2026-11-03', '10:00'),
+      }),
+    );
+    const second = json(
+      await book({
+        newCustomer: { name: 'Maria S.', phone: '+55 11 98888-2222' },
+        professionalId: shop.professionals.joao,
+        serviceIds: [shop.services.corte],
+        startsAt: sp('2026-11-03', '11:00'),
+      }),
+    );
     expect(second.customer.id).toBe(first.customer.id);
   });
 
   it('preço "a partir de" fica marcado como estimativa', async () => {
-    const a = json(await book({ professionalId: shop.professionals.joao, serviceIds: [shop.services.coloracao], startsAt: sp('2026-11-03', '10:00') }));
+    const a = json(
+      await book({
+        professionalId: shop.professionals.joao,
+        serviceIds: [shop.services.coloracao],
+        startsAt: sp('2026-11-03', '10:00'),
+      }),
+    );
     expect(a.priceIsEstimate).toBe(true);
     expect(a.totalPriceCents).toBe(12000);
   });
@@ -145,42 +175,77 @@ describe('criação de agendamentos', () => {
     ['depois do fechamento', sp('2026-11-03', '18:45'), 'CLOSED'],
     ['no passado', sp('2026-11-02', '08:00'), 'IN_PAST'],
   ])('recusa horário inválido: %s', async (_label, startsAt, reason) => {
-    const res = await book({ professionalId: shop.professionals.joao, serviceIds: [shop.services.corte], startsAt });
+    const res = await book({
+      professionalId: shop.professionals.joao,
+      serviceIds: [shop.services.corte],
+      startsAt,
+    });
     expect(res.statusCode).toBe(409);
     expect(json(res).error).toMatchObject({ code: 'SLOT_UNAVAILABLE', details: { reason } });
   });
 
   it('recusa fora da jornada do profissional', async () => {
-    const res = await book({ professionalId: shop.professionals.pedro, serviceIds: [shop.services.corte], startsAt: sp('2026-11-03', '09:00') });
+    const res = await book({
+      professionalId: shop.professionals.pedro,
+      serviceIds: [shop.services.corte],
+      startsAt: sp('2026-11-03', '09:00'),
+    });
     expect(json(res).error.details.reason).toBe('OUTSIDE_WORKING_HOURS');
   });
 
   it('recusa conflito, inclusive com o intervalo de limpeza do anterior', async () => {
-    expect((await book({ professionalId: shop.professionals.joao, serviceIds: [shop.services.barba], startsAt: sp('2026-11-03', '10:00') })).statusCode).toBe(201);
-    const overlap = await book({ professionalId: shop.professionals.joao, serviceIds: [shop.services.corte], startsAt: sp('2026-11-03', '10:30') });
+    expect(
+      (
+        await book({
+          professionalId: shop.professionals.joao,
+          serviceIds: [shop.services.barba],
+          startsAt: sp('2026-11-03', '10:00'),
+        })
+      ).statusCode,
+    ).toBe(201);
+    const overlap = await book({
+      professionalId: shop.professionals.joao,
+      serviceIds: [shop.services.corte],
+      startsAt: sp('2026-11-03', '10:30'),
+    });
     expect(overlap.statusCode).toBe(409);
     expect(json(overlap).error.details.reason).toBe('CONFLICT');
-    const after = await book({ professionalId: shop.professionals.joao, serviceIds: [shop.services.corte], startsAt: sp('2026-11-03', '10:40') });
+    const after = await book({
+      professionalId: shop.professionals.joao,
+      serviceIds: [shop.services.corte],
+      startsAt: sp('2026-11-03', '10:40'),
+    });
     expect(after.statusCode).toBe(201);
   });
 
   it('CONCORRÊNCIA: 15 pedidos simultâneos pelo mesmo horário → 1 confirmado, 14 recusados', async () => {
     const attempts = await Promise.all(
       Array.from({ length: 15 }, (_, i) =>
-        book({ newCustomer: { name: `Cliente ${i}` }, professionalId: shop.professionals.joao, serviceIds: [shop.services.corte], startsAt: sp('2026-11-03', '16:00') }),
+        book({
+          newCustomer: { name: `Cliente ${i}` },
+          professionalId: shop.professionals.joao,
+          serviceIds: [shop.services.corte],
+          startsAt: sp('2026-11-03', '16:00'),
+        }),
       ),
     );
     const codes = attempts.map((r) => r.statusCode);
     expect(codes.filter((c) => c === 201)).toHaveLength(1);
     expect(codes.filter((c) => c === 409)).toHaveLength(14);
-    const list = json(await owner.get(`${shop.base}/appointments?from=2026-11-03&to=2026-11-03`)).appointments;
+    const list = json(
+      await owner.get(`${shop.base}/appointments?from=2026-11-03&to=2026-11-03`),
+    ).appointments;
     expect(list).toHaveLength(1);
   });
 
   it('CONCORRÊNCIA com "qualquer profissional": 6 pedidos, 2 profissionais → exatamente 2 reservas', async () => {
     const attempts = await Promise.all(
       Array.from({ length: 6 }, (_, i) =>
-        book({ newCustomer: { name: `Cliente ${i}` }, serviceIds: [shop.services.barba], startsAt: sp('2026-11-03', '11:00') }),
+        book({
+          newCustomer: { name: `Cliente ${i}` },
+          serviceIds: [shop.services.barba],
+          startsAt: sp('2026-11-03', '11:00'),
+        }),
       ),
     );
     const ok = attempts.filter((r) => r.statusCode === 201).map((r) => json(r).professional.id);
@@ -191,14 +256,26 @@ describe('criação de agendamentos', () => {
 
   it('"qualquer profissional" distribui para o menos ocupado', async () => {
     // João já tem dois atendimentos no dia; Pedro, nenhum
-    await book({ professionalId: shop.professionals.joao, serviceIds: [shop.services.corte], startsAt: sp('2026-11-03', '10:00') });
-    await book({ professionalId: shop.professionals.joao, serviceIds: [shop.services.corte], startsAt: sp('2026-11-03', '10:30') });
+    await book({
+      professionalId: shop.professionals.joao,
+      serviceIds: [shop.services.corte],
+      startsAt: sp('2026-11-03', '10:00'),
+    });
+    await book({
+      professionalId: shop.professionals.joao,
+      serviceIds: [shop.services.corte],
+      startsAt: sp('2026-11-03', '10:30'),
+    });
     const a = json(await book({ serviceIds: [shop.services.barba], startsAt: sp('2026-11-03', '14:00') }));
     expect(a.professional.id).toBe(shop.professionals.pedro);
   });
 
   it('idempotência: a mesma chave não duplica a reserva', async () => {
-    const body = { professionalId: shop.professionals.joao, serviceIds: [shop.services.corte], startsAt: sp('2026-11-03', '12:00') };
+    const body = {
+      professionalId: shop.professionals.joao,
+      serviceIds: [shop.services.corte],
+      startsAt: sp('2026-11-03', '12:00'),
+    };
     const key = `teste-${Date.now()}`;
     const first = await book(body, { 'idempotency-key': key });
     const replay = await book(body, { 'idempotency-key': key });
@@ -209,46 +286,93 @@ describe('criação de agendamentos', () => {
     // repetições simultâneas com a mesma chave também resultam em uma única reserva
     const key2 = `${key}-b`;
     const burst = await Promise.all(
-      Array.from({ length: 5 }, () => book({ ...body, startsAt: sp('2026-11-03', '13:00') }, { 'idempotency-key': key2 })),
+      Array.from({ length: 5 }, () =>
+        book({ ...body, startsAt: sp('2026-11-03', '13:00') }, { 'idempotency-key': key2 }),
+      ),
     );
     expect(new Set(burst.map((r) => json(r).id)).size).toBe(1);
   });
 
   it('encaixe deliberado permite sobrepor; gestor pode agendar fora do horário', async () => {
-    await book({ professionalId: shop.professionals.joao, serviceIds: [shop.services.corte], startsAt: sp('2026-11-03', '10:00') });
-    const overbook = await book({ professionalId: shop.professionals.joao, serviceIds: [shop.services.corte], startsAt: sp('2026-11-03', '10:00'), isOverbook: true });
+    await book({
+      professionalId: shop.professionals.joao,
+      serviceIds: [shop.services.corte],
+      startsAt: sp('2026-11-03', '10:00'),
+    });
+    const overbook = await book({
+      professionalId: shop.professionals.joao,
+      serviceIds: [shop.services.corte],
+      startsAt: sp('2026-11-03', '10:00'),
+      isOverbook: true,
+    });
     expect(overbook.statusCode).toBe(201);
     expect(json(overbook).isOverbook).toBe(true);
-    const late = await book({ professionalId: shop.professionals.joao, serviceIds: [shop.services.corte], startsAt: sp('2026-11-03', '19:30'), allowOutsideHours: true });
+    const late = await book({
+      professionalId: shop.professionals.joao,
+      serviceIds: [shop.services.corte],
+      startsAt: sp('2026-11-03', '19:30'),
+      allowOutsideHours: true,
+    });
     expect(late.statusCode).toBe(201);
   });
 
   it('o painel pode agendar em cima da hora; política do cliente vale para disponibilidade', async () => {
-    const res = await book({ professionalId: shop.professionals.joao, serviceIds: [shop.services.corte], startsAt: sp('2026-11-02', '10:15') });
+    const res = await book({
+      professionalId: shop.professionals.joao,
+      serviceIds: [shop.services.corte],
+      startsAt: sp('2026-11-02', '10:15'),
+    });
     expect(res.statusCode).toBe(201);
   });
 });
 
 describe('cancelamento, remarcação e status', () => {
   it('cancelar libera o horário', async () => {
-    const a = json(await book({ professionalId: shop.professionals.joao, serviceIds: [shop.services.corte], startsAt: sp('2026-11-03', '10:00') }));
-    const cancel = await owner.post(`${shop.base}/appointments/${a.id}/cancel`, { reason: 'Cliente pediu', cancelledBy: 'CUSTOMER' });
+    const a = json(
+      await book({
+        professionalId: shop.professionals.joao,
+        serviceIds: [shop.services.corte],
+        startsAt: sp('2026-11-03', '10:00'),
+      }),
+    );
+    const cancel = await owner.post(`${shop.base}/appointments/${a.id}/cancel`, {
+      reason: 'Cliente pediu',
+      cancelledBy: 'CUSTOMER',
+    });
     expect(json(cancel).status).toBe('CANCELLED');
     expect((await owner.post(`${shop.base}/appointments/${a.id}/cancel`, {})).statusCode).toBe(409);
-    const again = await book({ professionalId: shop.professionals.joao, serviceIds: [shop.services.corte], startsAt: sp('2026-11-03', '10:00') });
+    const again = await book({
+      professionalId: shop.professionals.joao,
+      serviceIds: [shop.services.corte],
+      startsAt: sp('2026-11-03', '10:00'),
+    });
     expect(again.statusCode).toBe(201);
     const customer = json(await owner.get(`${shop.base}/customers/${a.customer.id}`)).customer;
     expect(customer.cancellationCount).toBe(1);
   });
 
   it('remarcação é atômica: novo horário ocupado → nada muda', async () => {
-    const a = json(await book({ professionalId: shop.professionals.joao, serviceIds: [shop.services.corte], startsAt: sp('2026-11-03', '10:00') }));
-    await book({ professionalId: shop.professionals.joao, serviceIds: [shop.services.corte], startsAt: sp('2026-11-03', '15:00') });
-    const fail = await owner.post(`${shop.base}/appointments/${a.id}/reschedule`, { startsAt: sp('2026-11-03', '15:00') });
+    const a = json(
+      await book({
+        professionalId: shop.professionals.joao,
+        serviceIds: [shop.services.corte],
+        startsAt: sp('2026-11-03', '10:00'),
+      }),
+    );
+    await book({
+      professionalId: shop.professionals.joao,
+      serviceIds: [shop.services.corte],
+      startsAt: sp('2026-11-03', '15:00'),
+    });
+    const fail = await owner.post(`${shop.base}/appointments/${a.id}/reschedule`, {
+      startsAt: sp('2026-11-03', '15:00'),
+    });
     expect(fail.statusCode).toBe(409);
     expect(json(await owner.get(`${shop.base}/appointments/${a.id}`)).status).toBe('CONFIRMED');
 
-    const ok = await owner.post(`${shop.base}/appointments/${a.id}/reschedule`, { startsAt: sp('2026-11-03', '10:15') });
+    const ok = await owner.post(`${shop.base}/appointments/${a.id}/reschedule`, {
+      startsAt: sp('2026-11-03', '10:15'),
+    });
     expect(ok.statusCode).toBe(200); // sobrepõe o próprio horário antigo: permitido
     const moved = json(ok);
     expect(moved.rescheduledFromId).toBe(a.id);
@@ -257,16 +381,55 @@ describe('cancelamento, remarcação e status', () => {
     expect(old).toMatchObject({ status: 'CANCELLED', cancelReason: 'Remarcado' });
   });
 
+  it('na remarcação, a disponibilidade desconsidera o próprio agendamento', async () => {
+    const a = json(
+      await book({
+        professionalId: shop.professionals.joao,
+        serviceIds: [shop.services.corte],
+        startsAt: sp('2026-11-03', '10:00'),
+      }),
+    );
+    const url = `${shop.base}/availability?serviceIds=${shop.services.corte}&professionalId=${shop.professionals.joao}&from=2026-11-03&to=2026-11-03`;
+    const normal = startsOf(json(await owner.get(url)).slots);
+    expect(normal).not.toContain(iso('2026-11-03', '10:00'));
+    const forReschedule = startsOf(json(await owner.get(`${url}&excludeAppointmentId=${a.id}`)).slots);
+    expect(forReschedule).toContain(iso('2026-11-03', '10:00'));
+    // id de agendamento de outro estabelecimento/inexistente não libera nada
+    const bogus = startsOf(
+      json(await owner.get(`${url}&excludeAppointmentId=00000000-0000-4000-8000-000000000000`)).slots,
+    );
+    expect(bogus).not.toContain(iso('2026-11-03', '10:00'));
+  });
+
   it('remarcar para outro profissional respeita a jornada dele', async () => {
-    const a = json(await book({ professionalId: shop.professionals.joao, serviceIds: [shop.services.corte], startsAt: sp('2026-11-03', '09:00') }));
-    const bad = await owner.post(`${shop.base}/appointments/${a.id}/reschedule`, { startsAt: sp('2026-11-03', '09:30'), professionalId: shop.professionals.pedro });
+    const a = json(
+      await book({
+        professionalId: shop.professionals.joao,
+        serviceIds: [shop.services.corte],
+        startsAt: sp('2026-11-03', '09:00'),
+      }),
+    );
+    const bad = await owner.post(`${shop.base}/appointments/${a.id}/reschedule`, {
+      startsAt: sp('2026-11-03', '09:30'),
+      professionalId: shop.professionals.pedro,
+    });
     expect(json(bad).error.details.reason).toBe('OUTSIDE_WORKING_HOURS');
-    const ok = await owner.post(`${shop.base}/appointments/${a.id}/reschedule`, { startsAt: sp('2026-11-03', '11:00'), professionalId: shop.professionals.pedro });
+    const ok = await owner.post(`${shop.base}/appointments/${a.id}/reschedule`, {
+      startsAt: sp('2026-11-03', '11:00'),
+      professionalId: shop.professionals.pedro,
+    });
     expect(json(ok).professional.id).toBe(shop.professionals.pedro);
   });
 
   it('concluir/falta só após o início e atualizam o CRM', async () => {
-    const a = json(await book({ newCustomer: { name: 'Fiel', phone: '11 97777-3333' }, professionalId: shop.professionals.joao, serviceIds: [shop.services.corte], startsAt: sp('2026-11-03', '10:00') }));
+    const a = json(
+      await book({
+        newCustomer: { name: 'Fiel', phone: '11 97777-3333' },
+        professionalId: shop.professionals.joao,
+        serviceIds: [shop.services.corte],
+        startsAt: sp('2026-11-03', '10:00'),
+      }),
+    );
     const early = await owner.post(`${shop.base}/appointments/${a.id}/status`, { status: 'COMPLETED' });
     expect(json(early).error.code).toBe('APPOINTMENT_NOT_STARTED');
     ctx.setNow(new Date(sp('2026-11-03', '10:45')));
@@ -284,13 +447,35 @@ describe('cancelamento, remarcação e status', () => {
     const sctx = await serviceContextForTest(ctx, shop.tenantId);
     const held = await createAppointment(
       sctx,
-      { newCustomer: { name: 'Em conversa' }, professionalId: shop.professionals.joao, serviceIds: [shop.services.corte], startsAt: sp('2026-11-03', '10:00'), source: 'AI_WHATSAPP' },
+      {
+        newCustomer: { name: 'Em conversa' },
+        professionalId: shop.professionals.joao,
+        serviceIds: [shop.services.corte],
+        startsAt: sp('2026-11-03', '10:00'),
+        source: 'AI_WHATSAPP',
+      },
       { holdTtlSec: 120, customerFacing: true, forAi: true },
     );
     expect(held.appointment.status).toBe('HELD');
-    expect((await book({ professionalId: shop.professionals.joao, serviceIds: [shop.services.corte], startsAt: sp('2026-11-03', '10:00') })).statusCode).toBe(409);
+    expect(
+      (
+        await book({
+          professionalId: shop.professionals.joao,
+          serviceIds: [shop.services.corte],
+          startsAt: sp('2026-11-03', '10:00'),
+        })
+      ).statusCode,
+    ).toBe(409);
     ctx.setNow(new Date(MONDAY_10AM.getTime() + 3 * 60_000));
-    expect((await book({ professionalId: shop.professionals.joao, serviceIds: [shop.services.corte], startsAt: sp('2026-11-03', '10:00') })).statusCode).toBe(201);
+    expect(
+      (
+        await book({
+          professionalId: shop.professionals.joao,
+          serviceIds: [shop.services.corte],
+          startsAt: sp('2026-11-03', '10:00'),
+        })
+      ).statusCode,
+    ).toBe(201);
   });
 
   it('IA não pode criar encaixe nem agendar fora do horário', async () => {
@@ -300,7 +485,14 @@ describe('cancelamento, remarcação e status', () => {
     await expect(
       createAppointment(
         sctx,
-        { newCustomer: { name: 'X' }, professionalId: shop.professionals.joao, serviceIds: [shop.services.corte], startsAt: sp('2026-11-03', '10:00'), source: 'AI_PHONE', isOverbook: true },
+        {
+          newCustomer: { name: 'X' },
+          professionalId: shop.professionals.joao,
+          serviceIds: [shop.services.corte],
+          startsAt: sp('2026-11-03', '10:00'),
+          source: 'AI_PHONE',
+          isOverbook: true,
+        },
         { forAi: true, customerFacing: true },
       ),
     ).rejects.toMatchObject({ statusCode: 403 });
@@ -308,7 +500,13 @@ describe('cancelamento, remarcação e status', () => {
     await expect(
       createAppointment(
         sctx,
-        { newCustomer: { name: 'X' }, professionalId: shop.professionals.joao, serviceIds: [shop.services.corte], startsAt: sp('2026-11-02', '10:30'), source: 'AI_PHONE' },
+        {
+          newCustomer: { name: 'X' },
+          professionalId: shop.professionals.joao,
+          serviceIds: [shop.services.corte],
+          startsAt: sp('2026-11-02', '10:30'),
+          source: 'AI_PHONE',
+        },
         { forAi: true, customerFacing: true },
       ),
     ).rejects.toMatchObject({ code: 'SLOT_UNAVAILABLE', reason: 'TOO_SOON' });
@@ -317,8 +515,17 @@ describe('cancelamento, remarcação e status', () => {
 
 describe('bloqueios com agendamentos existentes', () => {
   it('folga sobre agendamento exige confirmação explícita', async () => {
-    await book({ professionalId: shop.professionals.joao, serviceIds: [shop.services.corte], startsAt: sp('2026-11-03', '15:00') });
-    const body = { professionalId: shop.professionals.joao, kind: 'DAY_OFF', startsAt: sp('2026-11-03', '00:00'), endsAt: sp('2026-11-04', '00:00') };
+    await book({
+      professionalId: shop.professionals.joao,
+      serviceIds: [shop.services.corte],
+      startsAt: sp('2026-11-03', '15:00'),
+    });
+    const body = {
+      professionalId: shop.professionals.joao,
+      kind: 'DAY_OFF',
+      startsAt: sp('2026-11-03', '00:00'),
+      endsAt: sp('2026-11-04', '00:00'),
+    };
     const conflict = await owner.post(`${shop.base}/time-off`, body);
     expect(conflict.statusCode).toBe(409);
     expect(json(conflict).error.details.appointments).toHaveLength(1);
@@ -326,7 +533,11 @@ describe('bloqueios com agendamentos existentes', () => {
   });
 
   it('profissional com agendamentos futuros não pode ser removido', async () => {
-    await book({ professionalId: shop.professionals.pedro, serviceIds: [shop.services.corte], startsAt: sp('2026-11-03', '11:00') });
+    await book({
+      professionalId: shop.professionals.pedro,
+      serviceIds: [shop.services.corte],
+      startsAt: sp('2026-11-03', '11:00'),
+    });
     const res = await owner.delete(`${shop.base}/professionals/${shop.professionals.pedro}`);
     expect(res.statusCode).toBe(409);
     expect(json(res).error.code).toBe('PROFESSIONAL_HAS_UPCOMING_APPOINTMENTS');
@@ -335,10 +546,32 @@ describe('bloqueios com agendamentos existentes', () => {
 
 describe('dashboard com dados reais', () => {
   it('conta agendamentos, faturamento registrado (só concluídos), faltas e cancelamentos', async () => {
-    const a1 = json(await book({ professionalId: shop.professionals.joao, serviceIds: [shop.services.corte], startsAt: sp('2026-11-02', '10:15') }));
-    const a2 = json(await book({ professionalId: shop.professionals.joao, serviceIds: [shop.services.barba], startsAt: sp('2026-11-02', '11:00') }));
-    const a3 = json(await book({ professionalId: shop.professionals.joao, serviceIds: [shop.services.corte], startsAt: sp('2026-11-02', '12:00') }));
-    await book({ professionalId: shop.professionals.pedro, serviceIds: [shop.services.corte], startsAt: sp('2026-11-04', '10:00') });
+    const a1 = json(
+      await book({
+        professionalId: shop.professionals.joao,
+        serviceIds: [shop.services.corte],
+        startsAt: sp('2026-11-02', '10:15'),
+      }),
+    );
+    const a2 = json(
+      await book({
+        professionalId: shop.professionals.joao,
+        serviceIds: [shop.services.barba],
+        startsAt: sp('2026-11-02', '11:00'),
+      }),
+    );
+    const a3 = json(
+      await book({
+        professionalId: shop.professionals.joao,
+        serviceIds: [shop.services.corte],
+        startsAt: sp('2026-11-02', '12:00'),
+      }),
+    );
+    await book({
+      professionalId: shop.professionals.pedro,
+      serviceIds: [shop.services.corte],
+      startsAt: sp('2026-11-04', '10:00'),
+    });
     ctx.setNow(new Date(sp('2026-11-02', '12:30')));
     await owner.post(`${shop.base}/appointments/${a1.id}/status`, { status: 'COMPLETED' });
     await owner.post(`${shop.base}/appointments/${a2.id}/status`, { status: 'NO_SHOW' });

@@ -72,7 +72,9 @@ describe('fala', () => {
     expect(toSpeechText('Tenho 15h30 ou 16h, na sexta 06/11.')).toBe(
       'Tenho quinze e trinta ou dezesseis horas, na sexta seis de novembro.',
     );
-    expect(toSpeechText('Valor: R$ 1.250,50')).toBe('Valor: mil duzentos e cinquenta reais e cinquenta centavos');
+    expect(toSpeechText('Valor: R$ 1.250,50')).toBe(
+      'Valor: mil duzentos e cinquenta reais e cinquenta centavos',
+    );
   });
 
   it('emojis', () => {

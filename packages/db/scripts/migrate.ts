@@ -8,7 +8,9 @@ const url = useTest ? process.env.TEST_DATABASE_ADMIN_URL : process.env.DATABASE
 const role = process.env.DB_APP_ROLE ?? 'barber_app';
 
 if (!url) {
-  console.error(`Defina ${useTest ? 'TEST_DATABASE_ADMIN_URL' : 'DATABASE_ADMIN_URL'} (papel dono do schema).`);
+  console.error(
+    `Defina ${useTest ? 'TEST_DATABASE_ADMIN_URL' : 'DATABASE_ADMIN_URL'} (papel dono do schema).`,
+  );
   process.exit(1);
 }
 

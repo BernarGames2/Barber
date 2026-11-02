@@ -33,7 +33,10 @@ export async function createTestContext(start: Date = MONDAY_10AM): Promise<Test
   });
   const mailer = new MemoryMailer();
   let current = start.getTime();
-  const app = await buildApp({ config, db: handle.db, mailer, clock: () => new Date(current) }, { logger: false });
+  const app = await buildApp(
+    { config, db: handle.db, mailer, clock: () => new Date(current) },
+    { logger: false },
+  );
   await app.ready();
   return {
     app,
@@ -58,7 +61,8 @@ const nextIp = () => {
 };
 
 let emailCounter = 0;
-export const uniqueEmail = (prefix = 'user') => `${prefix}.${Date.now().toString(36)}.${++emailCounter}@teste.com.br`;
+export const uniqueEmail = (prefix = 'user') =>
+  `${prefix}.${Date.now().toString(36)}.${++emailCounter}@teste.com.br`;
 
 /** Cliente HTTP de teste com cookie de sessão e IP próprio (rate limit por IP). */
 export class TestClient {
@@ -97,15 +101,23 @@ export class TestClient {
   }
 
   get = (url: string, headers?: Record<string, string>) => this.request('GET', url, undefined, headers);
-  post = (url: string, body: unknown = {}, headers?: Record<string, string>) => this.request('POST', url, body, headers);
-  put = (url: string, body: unknown, headers?: Record<string, string>) => this.request('PUT', url, body, headers);
-  patch = (url: string, body: unknown, headers?: Record<string, string>) => this.request('PATCH', url, body, headers);
+  post = (url: string, body: unknown = {}, headers?: Record<string, string>) =>
+    this.request('POST', url, body, headers);
+  put = (url: string, body: unknown, headers?: Record<string, string>) =>
+    this.request('PUT', url, body, headers);
+  patch = (url: string, body: unknown, headers?: Record<string, string>) =>
+    this.request('PATCH', url, body, headers);
   delete = (url: string, headers?: Record<string, string>) => this.request('DELETE', url, undefined, headers);
 }
 
 export const json = <T = any>(res: LightMyRequestResponse): T => res.json() as T;
 
-export async function signup(ctx: TestContext, name = 'Dono Teste', email = uniqueEmail('dono'), password = 'senhaSegura123') {
+export async function signup(
+  ctx: TestContext,
+  name = 'Dono Teste',
+  email = uniqueEmail('dono'),
+  password = 'senhaSegura123',
+) {
   const client = new TestClient(ctx);
   const res = await client.post('/v1/auth/signup', { name, email, password, acceptTerms: true });
   if (res.statusCode !== 201) throw new Error(`signup falhou: ${res.statusCode} ${res.body}`);
@@ -151,9 +163,17 @@ export async function setupShop(client: TestClient, tenantId?: string): Promise<
   };
   const corte = await mk({ name: 'Corte', durationMin: 30, priceCents: 4500 });
   const barba = await mk({ name: 'Barba', durationMin: 30, priceCents: 3500, bufferAfterMin: 10 });
-  const coloracao = await mk({ name: 'Coloração', durationMin: 90, priceCents: 12000, priceType: 'STARTING_AT' });
+  const coloracao = await mk({
+    name: 'Coloração',
+    durationMin: 90,
+    priceCents: 12000,
+    priceType: 'STARTING_AT',
+  });
 
-  const joaoRes = await client.post(`${base}/professionals`, { name: 'João', serviceIds: [corte, barba, coloracao] });
+  const joaoRes = await client.post(`${base}/professionals`, {
+    name: 'João',
+    serviceIds: [corte, barba, coloracao],
+  });
   if (joaoRes.statusCode !== 201) throw new Error(`profissional: ${joaoRes.body}`);
   const pedroRes = await client.post(`${base}/professionals`, {
     name: 'Pedro',
@@ -163,10 +183,7 @@ export async function setupShop(client: TestClient, tenantId?: string): Promise<
   if (pedroRes.statusCode !== 201) throw new Error(`profissional: ${pedroRes.body}`);
   const pedro = json(pedroRes).id as string;
   const svcRes = await client.put(`${base}/professionals/${pedro}/services`, {
-    services: [
-      { serviceId: corte, durationMin: 40, priceCents: 5000 },
-      { serviceId: barba },
-    ],
+    services: [{ serviceId: corte, durationMin: 40, priceCents: 5000 }, { serviceId: barba }],
   });
   expect200(svcRes);
 

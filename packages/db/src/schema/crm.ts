@@ -42,7 +42,10 @@ export const customers = pgTable(
     /** Observações internas autorizadas. Não são lidas para o cliente pela IA. */
     notes: text('notes'),
     preferences: jsonb('preferences').$type<CustomerPreferences>().notNull().default({}),
-    tags: text('tags').array().notNull().default(sql`'{}'::text[]`),
+    tags: text('tags')
+      .array()
+      .notNull()
+      .default(sql`'{}'::text[]`),
     source: customerSourceEnum('source').notNull().default('DASHBOARD'),
     preferredProfessionalId: uuid('preferred_professional_id').references(() => professionals.id, {
       onDelete: 'set null',

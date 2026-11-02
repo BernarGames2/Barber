@@ -6,13 +6,24 @@ import { loadConfig } from './config';
 loadEnv();
 const config = loadConfig();
 
-const database = createDb(config.DATABASE_URL, { max: config.DB_POOL_MAX, applicationName: 'barber-voice-api' });
+const database = createDb(config.DATABASE_URL, {
+  max: config.DB_POOL_MAX,
+  applicationName: 'barber-voice-api',
+});
 const redis = config.REDIS_URL
-  ? new Redis(config.REDIS_URL, { connectTimeout: 1000, maxRetriesPerRequest: 1, enableOfflineQueue: false, lazyConnect: false })
+  ? new Redis(config.REDIS_URL, {
+      connectTimeout: 1000,
+      maxRetriesPerRequest: 1,
+      enableOfflineQueue: false,
+      lazyConnect: false,
+    })
   : null;
 redis?.on('error', () => undefined); // o rate limit falha aberto; erros já são registrados pelo plugin
 
-const app = await buildApp({ config, db: database.db, clock: () => new Date() }, { redis: redis ?? undefined });
+const app = await buildApp(
+  { config, db: database.db, clock: () => new Date() },
+  { redis: redis ?? undefined },
+);
 
 let shuttingDown = false;
 async function shutdown(signal: string) {

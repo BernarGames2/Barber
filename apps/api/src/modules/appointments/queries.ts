@@ -77,7 +77,11 @@ export async function loadAppointmentDtos(tx: Tx, ids: string[]): Promise<Appoin
 export type ServiceRow = typeof services.$inferSelect;
 
 /** Serviços ativos na ordem pedida. Falha se algum não existir ou estiver inativo. */
-export async function resolveServices(tx: Tx, serviceIds: string[], opts: { forAi?: boolean } = {}): Promise<ServiceRow[]> {
+export async function resolveServices(
+  tx: Tx,
+  serviceIds: string[],
+  opts: { forAi?: boolean } = {},
+): Promise<ServiceRow[]> {
   const unique = [...new Set(serviceIds)];
   const rows = await tx
     .select()
@@ -87,7 +91,10 @@ export async function resolveServices(tx: Tx, serviceIds: string[], opts: { forA
     throw Errors.unprocessable('SERVICE_UNAVAILABLE', 'Um ou mais serviços não existem ou estão inativos.');
   }
   if (opts.forAi && rows.some((r) => !r.bookableByAi)) {
-    throw Errors.unprocessable('SERVICE_NOT_BOOKABLE_BY_AI', 'Este serviço precisa ser agendado com a equipe.');
+    throw Errors.unprocessable(
+      'SERVICE_NOT_BOOKABLE_BY_AI',
+      'Este serviço precisa ser agendado com a equipe.',
+    );
   }
   const map = new Map(rows.map((r) => [r.id, r]));
   return unique.map((id) => map.get(id)!);
@@ -225,7 +232,13 @@ export async function loadSchedulingData(
     const off = await tx
       .select({ professionalId: timeOff.professionalId, startsAt: timeOff.startsAt, endsAt: timeOff.endsAt })
       .from(timeOff)
-      .where(and(inArray(timeOff.professionalId, professionalIds), lt(timeOff.startsAt, to), gt(timeOff.endsAt, from)));
+      .where(
+        and(
+          inArray(timeOff.professionalId, professionalIds),
+          lt(timeOff.startsAt, to),
+          gt(timeOff.endsAt, from),
+        ),
+      );
     const busy = await tx
       .select({
         professionalId: appointments.professionalId,
@@ -246,8 +259,12 @@ export async function loadSchedulingData(
 
     for (const p of profs) {
       byProfessional.set(p.id, {
-        workingHours: p.usesBusinessHours ? null : toWeeklyIntervals(wh.filter((w) => w.professionalId === p.id)),
-        timeOff: off.filter((o) => o.professionalId === p.id).map((o) => ({ start: o.startsAt.getTime(), end: o.endsAt.getTime() })),
+        workingHours: p.usesBusinessHours
+          ? null
+          : toWeeklyIntervals(wh.filter((w) => w.professionalId === p.id)),
+        timeOff: off
+          .filter((o) => o.professionalId === p.id)
+          .map((o) => ({ start: o.startsAt.getTime(), end: o.endsAt.getTime() })),
         busy: busy
           .filter((b) => b.professionalId === p.id)
           .map((b) => ({ start: b.startsAt.getTime(), end: b.blockedUntil.getTime() })),

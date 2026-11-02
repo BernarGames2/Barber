@@ -23,7 +23,11 @@ export const serviceInputSchema = z
     name: nameSchema('Nome do serviço', 80),
     description: optionalText(500),
     category: optionalText(60),
-    durationMin: z.number().int().min(5, 'Duração mínima de 5 minutos').max(720, 'Duração máxima de 12 horas'),
+    durationMin: z
+      .number()
+      .int()
+      .min(5, 'Duração mínima de 5 minutos')
+      .max(720, 'Duração máxima de 12 horas'),
     bufferAfterMin: z.number().int().min(0).max(240).default(0),
     priceType: z.enum(PRICE_TYPES).default('FIXED'),
     priceCents: centsSchema.nullish(),
@@ -34,7 +38,11 @@ export const serviceInputSchema = z
   })
   .superRefine((v, ctx) => {
     if (v.priceType !== 'ON_REQUEST' && (v.priceCents === null || v.priceCents === undefined)) {
-      ctx.addIssue({ code: 'custom', message: 'Informe o preço (ou marque como "sob consulta")', path: ['priceCents'] });
+      ctx.addIssue({
+        code: 'custom',
+        message: 'Informe o preço (ou marque como "sob consulta")',
+        path: ['priceCents'],
+      });
     }
   });
 export type ServiceInput = z.infer<typeof serviceInputSchema>;
@@ -111,7 +119,10 @@ export const timeOffInputSchema = z
     startsAt: instantSchema,
     endsAt: instantSchema,
   })
-  .refine((v) => Date.parse(v.endsAt) > Date.parse(v.startsAt), { message: 'O fim deve ser depois do início', path: ['endsAt'] });
+  .refine((v) => Date.parse(v.endsAt) > Date.parse(v.startsAt), {
+    message: 'O fim deve ser depois do início',
+    path: ['endsAt'],
+  });
 
 export interface ServiceDto {
   id: string;

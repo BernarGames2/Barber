@@ -1,15 +1,40 @@
 import { z } from 'zod';
-import { instantSchema, localDateSchema, localTimeSchema, nameSchema, optionalText, phoneSchema, uuidSchema } from './common';
+import {
+  instantSchema,
+  localDateSchema,
+  localTimeSchema,
+  nameSchema,
+  optionalText,
+  phoneSchema,
+  uuidSchema,
+} from './common';
 
-export const APPOINTMENT_STATUSES = ['HELD', 'PENDING', 'CONFIRMED', 'COMPLETED', 'CANCELLED', 'NO_SHOW', 'EXPIRED'] as const;
+export const APPOINTMENT_STATUSES = [
+  'HELD',
+  'PENDING',
+  'CONFIRMED',
+  'COMPLETED',
+  'CANCELLED',
+  'NO_SHOW',
+  'EXPIRED',
+] as const;
 export type AppointmentStatus = (typeof APPOINTMENT_STATUSES)[number];
 
-export const APPOINTMENT_SOURCES = ['DASHBOARD', 'AI_PHONE', 'AI_WHATSAPP', 'ONLINE', 'WALK_IN', 'IMPORT'] as const;
+export const APPOINTMENT_SOURCES = [
+  'DASHBOARD',
+  'AI_PHONE',
+  'AI_WHATSAPP',
+  'ONLINE',
+  'WALK_IN',
+  'IMPORT',
+] as const;
 export type AppointmentSource = (typeof APPOINTMENT_SOURCES)[number];
 
 const serviceIdsSchema = z
   .union([z.array(uuidSchema), uuidSchema.transform((v) => [v])])
-  .pipe(z.array(uuidSchema).min(1, 'Escolha ao menos um serviço').max(5, 'No máximo 5 serviços por agendamento'));
+  .pipe(
+    z.array(uuidSchema).min(1, 'Escolha ao menos um serviço').max(5, 'No máximo 5 serviços por agendamento'),
+  );
 
 export const availabilityQuerySchema = z
   .object({
@@ -22,10 +47,15 @@ export const availabilityQuerySchema = z
     to: localDateSchema,
     timeFrom: localTimeSchema.optional(),
     timeTo: localTimeSchema.optional(),
+    /** Remarcação: desconsidera o próprio agendamento ao calcular os horários livres. */
+    excludeAppointmentId: uuidSchema.optional(),
   })
   .refine((v) => v.from <= v.to, { message: 'Período inválido', path: ['to'] });
 
-const newCustomerSchema = z.object({ name: nameSchema('Nome do cliente', 120), phone: phoneSchema.nullish() });
+const newCustomerSchema = z.object({
+  name: nameSchema('Nome do cliente', 120),
+  phone: phoneSchema.nullish(),
+});
 
 export const createAppointmentSchema = z
   .object({

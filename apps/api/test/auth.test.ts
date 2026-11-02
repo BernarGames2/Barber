@@ -13,7 +13,12 @@ describe('cadastro e sessão', () => {
   it('cria conta, define cookie seguro e retorna o usuário', async () => {
     const client = new TestClient(ctx);
     const email = uniqueEmail('novo');
-    const res = await client.post('/v1/auth/signup', { name: 'Ana Souza', email, password: 'senhaSegura123', acceptTerms: true });
+    const res = await client.post('/v1/auth/signup', {
+      name: 'Ana Souza',
+      email,
+      password: 'senhaSegura123',
+      acceptTerms: true,
+    });
     expect(res.statusCode).toBe(201);
     const setCookie = String(res.headers['set-cookie']);
     expect(setCookie).toMatch(/bv_session=/);
@@ -43,7 +48,12 @@ describe('cadastro e sessão', () => {
 
   it('valida senha fraca e termos com mensagens em português', async () => {
     const client = new TestClient(ctx);
-    const res = await client.post('/v1/auth/signup', { name: 'X', email: 'invalido', password: '123', acceptTerms: false });
+    const res = await client.post('/v1/auth/signup', {
+      name: 'X',
+      email: 'invalido',
+      password: '123',
+      acceptTerms: false,
+    });
     expect(res.statusCode).toBe(400);
     const paths = json(res).error.details.map((d: { path: string }) => d.path);
     expect(paths).toEqual(expect.arrayContaining(['name', 'email', 'password', 'acceptTerms']));
@@ -97,7 +107,10 @@ describe('login', () => {
     const { email } = await signup(ctx);
     const c = new TestClient(ctx);
     const wrong = await c.post('/v1/auth/login', { email, password: 'senhaErrada999' });
-    const missing = await c.post('/v1/auth/login', { email: uniqueEmail('naoexiste'), password: 'qualquer123' });
+    const missing = await c.post('/v1/auth/login', {
+      email: uniqueEmail('naoexiste'),
+      password: 'qualquer123',
+    });
     expect(wrong.statusCode).toBe(401);
     expect(missing.statusCode).toBe(401);
     expect(json(wrong).error).toEqual(json(missing).error);
@@ -124,7 +137,9 @@ describe('login', () => {
     const c = new TestClient(ctx);
     const statuses: number[] = [];
     for (let i = 0; i < 12; i++) {
-      statuses.push((await c.post('/v1/auth/login', { email: uniqueEmail('rl'), password: 'x1234567890' })).statusCode);
+      statuses.push(
+        (await c.post('/v1/auth/login', { email: uniqueEmail('rl'), password: 'x1234567890' })).statusCode,
+      );
     }
     expect(statuses).toContain(429);
   });
@@ -142,8 +157,12 @@ describe('redefinição de senha', () => {
     const reset = await c.post('/v1/auth/password/reset', { token, password: 'novaSenha2026' });
     expect(reset.statusCode).toBe(200);
     expect((await oldSession.get('/v1/auth/me')).statusCode).toBe(401);
-    expect((await c.post('/v1/auth/password/reset', { token, password: 'outraSenha2026' })).statusCode).toBe(400);
-    expect((await new TestClient(ctx).post('/v1/auth/login', { email, password: 'novaSenha2026' })).statusCode).toBe(200);
+    expect((await c.post('/v1/auth/password/reset', { token, password: 'outraSenha2026' })).statusCode).toBe(
+      400,
+    );
+    expect(
+      (await new TestClient(ctx).post('/v1/auth/login', { email, password: 'novaSenha2026' })).statusCode,
+    ).toBe(200);
   });
 
   it('não revela se o e-mail existe', async () => {
@@ -158,7 +177,10 @@ describe('redefinição de senha', () => {
     await new TestClient(ctx).post('/v1/auth/password/forgot', { email });
     const token = /token=([\w-]+)/.exec(ctx.mailer.lastTo(email)!.text)![1]!;
     ctx.setNow(new Date(ctx.now().getTime() + 61 * 60_000));
-    const res = await new TestClient(ctx).post('/v1/auth/password/reset', { token, password: 'novaSenha2026' });
+    const res = await new TestClient(ctx).post('/v1/auth/password/reset', {
+      token,
+      password: 'novaSenha2026',
+    });
     expect(res.statusCode).toBe(400);
   });
 
@@ -176,7 +198,12 @@ describe('proteções HTTP', () => {
     const res = await client.post('/v1/tenants', { name: 'X' }, { origin: 'https://site-malicioso.com' });
     expect(res.statusCode).toBe(403);
     expect(json(res).error.code).toBe('CSRF_REJECTED');
-    const res2 = await client.request('POST', '/v1/auth/logout', {}, { origin: '', 'sec-fetch-site': 'cross-site' });
+    const res2 = await client.request(
+      'POST',
+      '/v1/auth/logout',
+      {},
+      { origin: '', 'sec-fetch-site': 'cross-site' },
+    );
     expect(res2.statusCode).toBe(403);
   });
 
@@ -199,9 +226,17 @@ describe('proteções HTTP', () => {
   });
 
   it('CORS só libera a origem do painel', async () => {
-    const ok = await ctx.app.inject({ method: 'OPTIONS', url: '/v1/auth/me', headers: { origin: 'http://localhost:3000', 'access-control-request-method': 'GET' } });
+    const ok = await ctx.app.inject({
+      method: 'OPTIONS',
+      url: '/v1/auth/me',
+      headers: { origin: 'http://localhost:3000', 'access-control-request-method': 'GET' },
+    });
     expect(ok.headers['access-control-allow-origin']).toBe('http://localhost:3000');
-    const bad = await ctx.app.inject({ method: 'OPTIONS', url: '/v1/auth/me', headers: { origin: 'https://evil.com', 'access-control-request-method': 'GET' } });
+    const bad = await ctx.app.inject({
+      method: 'OPTIONS',
+      url: '/v1/auth/me',
+      headers: { origin: 'https://evil.com', 'access-control-request-method': 'GET' },
+    });
     expect(bad.headers['access-control-allow-origin']).toBeUndefined();
   });
 

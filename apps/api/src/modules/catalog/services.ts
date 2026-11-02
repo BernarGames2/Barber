@@ -30,7 +30,10 @@ function mapWriteError(err: unknown): never {
     throw Errors.conflict('SERVICE_NAME_EXISTS', 'Já existe um serviço com este nome.');
   }
   if (code === PG_ERROR.CHECK_VIOLATION) {
-    throw Errors.unprocessable('INVALID_SERVICE', 'Dados do serviço inconsistentes (verifique preço e duração).');
+    throw Errors.unprocessable(
+      'INVALID_SERVICE',
+      'Dados do serviço inconsistentes (verifique preço e duração).',
+    );
   }
   throw err;
 }
@@ -106,7 +109,9 @@ export async function updateService(
         entityId: serviceId,
         metadata: {
           fields: Object.keys(fields),
-          ...(fields.priceCents !== undefined ? { priceFrom: before.priceCents, priceTo: s!.priceCents } : {}),
+          ...(fields.priceCents !== undefined
+            ? { priceFrom: before.priceCents, priceTo: s!.priceCents }
+            : {}),
         },
         ...ctx.meta,
       });

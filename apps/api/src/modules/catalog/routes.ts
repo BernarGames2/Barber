@@ -25,7 +25,8 @@ import {
 import { archiveService, createService, listServices, updateService } from './services';
 import { createTimeOff, deleteTimeOff, listTimeOff } from './time-off';
 
-const idOf = (params: unknown, key: string, what: string) => uuidParam((params as Record<string, string>)[key], what);
+const idOf = (params: unknown, key: string, what: string) =>
+  uuidParam((params as Record<string, string>)[key], what);
 
 const timeOffQuerySchema = z.object({
   from: instantSchema,
@@ -47,7 +48,11 @@ export function catalogRoutes(app: FastifyInstance) {
 
   app.patch('/services/:serviceId', async (request) => {
     const ctx = serviceContext(request, 'catalog:write');
-    return updateService(ctx, idOf(request.params, 'serviceId', 'Serviço'), parse(serviceUpdateSchema, request.body));
+    return updateService(
+      ctx,
+      idOf(request.params, 'serviceId', 'Serviço'),
+      parse(serviceUpdateSchema, request.body),
+    );
   });
 
   app.delete('/services/:serviceId', async (request, reply) => {
@@ -62,12 +67,17 @@ export function catalogRoutes(app: FastifyInstance) {
   }));
 
   app.get('/professionals/:professionalId', async (request) =>
-    getProfessional(serviceContext(request, 'tenant:read'), idOf(request.params, 'professionalId', 'Profissional')),
+    getProfessional(
+      serviceContext(request, 'tenant:read'),
+      idOf(request.params, 'professionalId', 'Profissional'),
+    ),
   );
 
   app.post('/professionals', async (request, reply) => {
     const ctx = serviceContext(request, 'catalog:write');
-    return reply.status(201).send(await createProfessional(ctx, parse(professionalInputSchema, request.body)));
+    return reply
+      .status(201)
+      .send(await createProfessional(ctx, parse(professionalInputSchema, request.body)));
   });
 
   app.patch('/professionals/:professionalId', async (request) => {
@@ -101,7 +111,13 @@ export function catalogRoutes(app: FastifyInstance) {
   app.get('/time-off', async (request) => {
     const ctx = serviceContext(request, 'tenant:read');
     const q = parse(timeOffQuerySchema, request.query);
-    return { timeOff: await listTimeOff(ctx, { from: new Date(q.from), to: new Date(q.to), professionalId: q.professionalId }) };
+    return {
+      timeOff: await listTimeOff(ctx, {
+        from: new Date(q.from),
+        to: new Date(q.to),
+        professionalId: q.professionalId,
+      }),
+    };
   });
 
   app.post('/time-off', async (request, reply) => {

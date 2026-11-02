@@ -45,6 +45,7 @@ export async function securityPlugin(app: FastifyInstance) {
       return;
     }
     const site = request.headers['sec-fetch-site'];
-    if (site === 'cross-site') throw new AppError(403, 'CSRF_REJECTED', 'Origem da requisição não autorizada.');
+    if (site === 'cross-site')
+      throw new AppError(403, 'CSRF_REJECTED', 'Origem da requisição não autorizada.');
   });
 }

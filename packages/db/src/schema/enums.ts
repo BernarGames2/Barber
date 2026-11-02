@@ -26,7 +26,13 @@ export const priceTypeEnum = pgEnum('price_type', ['FIXED', 'STARTING_AT', 'ON_R
 
 export const closureKindEnum = pgEnum('closure_kind', ['HOLIDAY', 'CLOSURE', 'EVENT', 'OTHER']);
 
-export const timeOffKindEnum = pgEnum('time_off_kind', ['DAY_OFF', 'VACATION', 'BLOCK', 'SICK_LEAVE', 'OTHER']);
+export const timeOffKindEnum = pgEnum('time_off_kind', [
+  'DAY_OFF',
+  'VACATION',
+  'BLOCK',
+  'SICK_LEAVE',
+  'OTHER',
+]);
 
 export const customerSourceEnum = pgEnum('customer_source', [
   'DASHBOARD',
@@ -77,7 +83,13 @@ export const appointmentSourceEnum = pgEnum('appointment_source', [
 
 export const cancelledByEnum = pgEnum('cancelled_by', ['CUSTOMER', 'STAFF', 'AI', 'SYSTEM']);
 
-export const waitlistStatusEnum = pgEnum('waitlist_status', ['WAITING', 'OFFERED', 'BOOKED', 'CANCELLED', 'EXPIRED']);
+export const waitlistStatusEnum = pgEnum('waitlist_status', [
+  'WAITING',
+  'OFFERED',
+  'BOOKED',
+  'CANCELLED',
+  'EXPIRED',
+]);
 
 export const subscriptionStatusEnum = pgEnum('subscription_status', [
   'TRIALING',

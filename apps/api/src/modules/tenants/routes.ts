@@ -1,4 +1,9 @@
-import { businessHoursInputSchema, closureInputSchema, createTenantSchema, updateTenantSchema } from '@barber-voice/contracts';
+import {
+  businessHoursInputSchema,
+  closureInputSchema,
+  createTenantSchema,
+  updateTenantSchema,
+} from '@barber-voice/contracts';
 import type { FastifyInstance } from 'fastify';
 import { requestMeta, serviceContext } from '../../lib/permissions';
 import { parse, uuidParam } from '../../lib/validation';
@@ -18,12 +23,16 @@ import {
 
 /** Criação de estabelecimento (fora do escopo de tenant: o usuário ainda não tem vínculo). */
 export function tenantCreationRoutes(app: FastifyInstance) {
-  app.post('/v1/tenants', { config: { rateLimit: { max: 10, timeWindow: '1 hour' } } }, async (request, reply) => {
-    const auth = requireAuth(request);
-    const input = parse(createTenantSchema, request.body);
-    const tenant = await createTenant(app.deps, auth, input, requestMeta(request));
-    return reply.status(201).send(tenant);
-  });
+  app.post(
+    '/v1/tenants',
+    { config: { rateLimit: { max: 10, timeWindow: '1 hour' } } },
+    async (request, reply) => {
+      const auth = requireAuth(request);
+      const input = parse(createTenantSchema, request.body);
+      const tenant = await createTenant(app.deps, auth, input, requestMeta(request));
+      return reply.status(201).send(tenant);
+    },
+  );
 }
 
 /** Rotas registradas sob /v1/tenants/:tenantId (com resolveTenant). */
@@ -64,5 +73,7 @@ export function tenantRoutes(app: FastifyInstance) {
 
   app.get('/onboarding', async (request) => getOnboardingStatus(serviceContext(request, 'tenant:read')));
 
-  app.post('/onboarding/complete', async (request) => completeOnboarding(serviceContext(request, 'tenant:write')));
+  app.post('/onboarding/complete', async (request) =>
+    completeOnboarding(serviceContext(request, 'tenant:write')),
+  );
 }

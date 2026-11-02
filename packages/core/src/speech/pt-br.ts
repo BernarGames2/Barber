@@ -8,10 +8,54 @@ import { MONTH_NAMES_PT, WEEKDAY_NAMES_PT, type IsoWeekday, weekdayOf } from '..
 
 const UNITS_M = ['zero', 'um', 'dois', 'três', 'quatro', 'cinco', 'seis', 'sete', 'oito', 'nove'];
 const UNITS_F = ['zero', 'uma', 'duas', 'três', 'quatro', 'cinco', 'seis', 'sete', 'oito', 'nove'];
-const TEENS = ['dez', 'onze', 'doze', 'treze', 'quatorze', 'quinze', 'dezesseis', 'dezessete', 'dezoito', 'dezenove'];
-const TENS = ['', '', 'vinte', 'trinta', 'quarenta', 'cinquenta', 'sessenta', 'setenta', 'oitenta', 'noventa'];
-const HUNDREDS_M = ['', 'cento', 'duzentos', 'trezentos', 'quatrocentos', 'quinhentos', 'seiscentos', 'setecentos', 'oitocentos', 'novecentos'];
-const HUNDREDS_F = ['', 'cento', 'duzentas', 'trezentas', 'quatrocentas', 'quinhentas', 'seiscentas', 'setecentas', 'oitocentas', 'novecentas'];
+const TEENS = [
+  'dez',
+  'onze',
+  'doze',
+  'treze',
+  'quatorze',
+  'quinze',
+  'dezesseis',
+  'dezessete',
+  'dezoito',
+  'dezenove',
+];
+const TENS = [
+  '',
+  '',
+  'vinte',
+  'trinta',
+  'quarenta',
+  'cinquenta',
+  'sessenta',
+  'setenta',
+  'oitenta',
+  'noventa',
+];
+const HUNDREDS_M = [
+  '',
+  'cento',
+  'duzentos',
+  'trezentos',
+  'quatrocentos',
+  'quinhentos',
+  'seiscentos',
+  'setecentos',
+  'oitocentos',
+  'novecentos',
+];
+const HUNDREDS_F = [
+  '',
+  'cento',
+  'duzentas',
+  'trezentas',
+  'quatrocentas',
+  'quinhentas',
+  'seiscentas',
+  'setecentas',
+  'oitocentas',
+  'novecentas',
+];
 
 export type Gender = 'm' | 'f';
 
@@ -36,7 +80,8 @@ function below1000(n: number, g: Gender): string {
 
 /** Número inteiro (0 a 999.999.999) por extenso. */
 export function numberToWordsPt(n: number, gender: Gender = 'm'): string {
-  if (!Number.isInteger(n) || n < 0 || n > 999_999_999) throw new RangeError(`Número fora do suportado: ${n}`);
+  if (!Number.isInteger(n) || n < 0 || n > 999_999_999)
+    throw new RangeError(`Número fora do suportado: ${n}`);
   if (n === 0) return 'zero';
   const millions = Math.floor(n / 1_000_000);
   const thousands = Math.floor((n % 1_000_000) / 1000);
@@ -122,7 +167,10 @@ export function durationToSpeech(minutes: number): string {
 const EMOJI_RE = /(?:\p{Extended_Pictographic}|\p{Regional_Indicator}|‍|️|⃣|[\u{1f3fb}-\u{1f3ff}])/gu;
 
 export function stripEmojis(text: string): string {
-  return text.replace(EMOJI_RE, '').replace(/[ \t]{2,}/g, ' ').trim();
+  return text
+    .replace(EMOJI_RE, '')
+    .replace(/[ \t]{2,}/g, ' ')
+    .trim();
 }
 
 export function countEmojis(text: string): number {
@@ -172,7 +220,9 @@ export function toSpeechText(text: string, opts: SpeechOptions = {}): string {
   out = out.replace(/\b([01]?\d|2[0-3])(?::|h)([0-5]\d)\b/g, (_, h: string, m: string) =>
     timeToSpeech(`${h.padStart(2, '0')}:${m}`, style),
   );
-  out = out.replace(/\b([01]?\d|2[0-3])\s?h(?:s|rs)?\b/g, (_, h: string) => timeToSpeech(`${h.padStart(2, '0')}:00`, style));
+  out = out.replace(/\b([01]?\d|2[0-3])\s?h(?:s|rs)?\b/g, (_, h: string) =>
+    timeToSpeech(`${h.padStart(2, '0')}:00`, style),
+  );
 
   // 06/11 → dia seis de novembro
   out = out.replace(/\b([0-2]?\d|3[01])\/(0?[1-9]|1[0-2])(?:\/\d{2,4})?\b/g, (_, d: string, mo: string) => {

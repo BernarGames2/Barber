@@ -34,7 +34,9 @@ export function createDb(url: string, options: CreateDbOptions = {}): DbHandle {
     statement_timeout: options.statementTimeoutMs ?? 15_000,
   });
   // Erros em conexões ociosas não podem derrubar o processo.
-  pool.on('error', (err) => (options.onError ? options.onError(err) : console.error('[db] erro no pool', err.message)));
+  pool.on('error', (err) =>
+    options.onError ? options.onError(err) : console.error('[db] erro no pool', err.message),
+  );
   const db = drizzle({ client: pool, schema });
   return { db, pool, close: () => pool.end() };
 }
@@ -63,7 +65,9 @@ export async function withTenant<T>(
 
 /** Bloqueio transacional por profissional: serializa reservas e bloqueios da mesma agenda. */
 export async function lockProfessionalSchedule(tx: Tx, professionalId: string): Promise<void> {
-  await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtextextended(${`professional:${professionalId}`}, 0))`);
+  await tx.execute(
+    sql`SELECT pg_advisory_xact_lock(hashtextextended(${`professional:${professionalId}`}, 0))`,
+  );
 }
 
 export const PG_ERROR = {
@@ -95,7 +99,9 @@ function walkCause(err: unknown, pick: (e: PgLikeError) => string | undefined): 
 
 /** Código SQLSTATE do erro do PostgreSQL (o Drizzle encapsula o erro original em `cause`). */
 export function pgErrorCode(err: unknown): string | undefined {
-  return walkCause(err, (e) => (typeof e.code === 'string' && /^[0-9A-Z]{5}$/.test(e.code) ? e.code : undefined));
+  return walkCause(err, (e) =>
+    typeof e.code === 'string' && /^[0-9A-Z]{5}$/.test(e.code) ? e.code : undefined,
+  );
 }
 
 export function pgConstraintName(err: unknown): string | undefined {

@@ -203,7 +203,11 @@ describe('períodos do dia', () => {
   });
 
   it('"de manhã ou à tarde" é união', () => {
-    expect(r('amanhã de manhã ou à tarde').time).toEqual({ from: '06:00', to: '18:00', label: 'manhã ou tarde' });
+    expect(r('amanhã de manhã ou à tarde').time).toEqual({
+      from: '06:00',
+      to: '18:00',
+      label: 'manhã ou tarde',
+    });
   });
 
   it('"hoje mais tarde" começa uma hora depois de agora', () => {
@@ -214,7 +218,10 @@ describe('períodos do dia', () => {
 describe('intenções especiais e ruído', () => {
   it('primeiro horário disponível', () => {
     expect(r('o primeiro horário disponível').firstAvailable).toBe(true);
-    expect(r('o mais cedo possível amanhã')).toMatchObject({ firstAvailable: true, dates: day('2026-11-03') });
+    expect(r('o mais cedo possível amanhã')).toMatchObject({
+      firstAvailable: true,
+      dates: day('2026-11-03'),
+    });
     expect(r('qual o próximo horário livre?').firstAvailable).toBe(true);
   });
 
@@ -224,7 +231,10 @@ describe('intenções especiais e ruído', () => {
 
   it('mesmo horário da última vez', () => {
     expect(r('no mesmo horário da última vez').sameAsLastTime).toBe(true);
-    expect(r('sexta, no horário de sempre')).toMatchObject({ sameAsLastTime: true, dates: day('2026-11-06') });
+    expect(r('sexta, no horário de sempre')).toMatchObject({
+      sameAsLastTime: true,
+      dates: day('2026-11-06'),
+    });
   });
 
   it('ignora saudações ("boa tarde" não é período)', () => {
@@ -237,7 +247,10 @@ describe('intenções especiais e ruído', () => {
     const res = r('tem vaga pra 2 pessoas amanhã?');
     expect(res.dates).toEqual(day('2026-11-03'));
     expect(res.time).toBeNull();
-    expect(r('quero 3 cortes amanhã às 10')).toMatchObject({ dates: day('2026-11-03'), time: { exact: '10:00' } });
+    expect(r('quero 3 cortes amanhã às 10')).toMatchObject({
+      dates: day('2026-11-03'),
+      time: { exact: '10:00' },
+    });
     expect(r('custa R$ 50?').recognized).toBe(false);
   });
 

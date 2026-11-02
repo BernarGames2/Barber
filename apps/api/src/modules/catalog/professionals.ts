@@ -73,14 +73,32 @@ async function assertServicesExist(tx: Tx, serviceIds: string[]) {
   }
 }
 
-async function replaceWorkingHours(tx: Tx, tenantId: string, professionalId: string, hours: WeeklyIntervalDto[] | null) {
-  await tx.delete(professionalWorkingHours).where(eq(professionalWorkingHours.professionalId, professionalId));
+async function replaceWorkingHours(
+  tx: Tx,
+  tenantId: string,
+  professionalId: string,
+  hours: WeeklyIntervalDto[] | null,
+) {
+  await tx
+    .delete(professionalWorkingHours)
+    .where(eq(professionalWorkingHours.professionalId, professionalId));
   if (hours && hours.length) {
-    await tx.insert(professionalWorkingHours).values(
-      hours.map((h) => ({ tenantId, professionalId, weekday: h.weekday, startTime: h.start, endTime: h.end })),
-    );
+    await tx
+      .insert(professionalWorkingHours)
+      .values(
+        hours.map((h) => ({
+          tenantId,
+          professionalId,
+          weekday: h.weekday,
+          startTime: h.start,
+          endTime: h.end,
+        })),
+      );
   }
-  await tx.update(professionals).set({ usesBusinessHours: hours === null }).where(eq(professionals.id, professionalId));
+  await tx
+    .update(professionals)
+    .set({ usesBusinessHours: hours === null })
+    .where(eq(professionals.id, professionalId));
 }
 
 async function loadOne(tx: Tx, professionalId: string): Promise<ProfessionalRow> {
@@ -111,7 +129,10 @@ export async function getProfessional(ctx: ServiceContext, professionalId: strin
   });
 }
 
-export async function createProfessional(ctx: ServiceContext, input: ProfessionalInput): Promise<ProfessionalDto> {
+export async function createProfessional(
+  ctx: ServiceContext,
+  input: ProfessionalInput,
+): Promise<ProfessionalDto> {
   return withTenant(ctx.deps.db, ctx.tenant.id, async (tx) => {
     await assertServicesExist(tx, input.serviceIds);
     const [p] = await tx
@@ -133,7 +154,13 @@ export async function createProfessional(ctx: ServiceContext, input: Professiona
     if (input.serviceIds.length) {
       await tx
         .insert(professionalServices)
-        .values([...new Set(input.serviceIds)].map((serviceId) => ({ tenantId: ctx.tenant.id, professionalId: id, serviceId })));
+        .values(
+          [...new Set(input.serviceIds)].map((serviceId) => ({
+            tenantId: ctx.tenant.id,
+            professionalId: id,
+            serviceId,
+          })),
+        );
     }
     if (input.workingHours) await replaceWorkingHours(tx, ctx.tenant.id, id, input.workingHours);
     await audit(tx, {
@@ -144,7 +171,7 @@ export async function createProfessional(ctx: ServiceContext, input: Professiona
       entityId: id,
       ...ctx.meta,
     });
-    return (await assembleProfessionals(tx, [(await loadOne(tx, id))]))[0]!;
+    return (await assembleProfessionals(tx, [await loadOne(tx, id)]))[0]!;
   });
 }
 
@@ -197,11 +224,18 @@ export async function setProfessionalSchedule(
 export async function setProfessionalServices(
   ctx: ServiceContext,
   professionalId: string,
-  list: { serviceId: string; durationMin?: number | null | undefined; priceCents?: number | null | undefined }[],
+  list: {
+    serviceId: string;
+    durationMin?: number | null | undefined;
+    priceCents?: number | null | undefined;
+  }[],
 ): Promise<ProfessionalDto> {
   return withTenant(ctx.deps.db, ctx.tenant.id, async (tx) => {
     await loadOne(tx, professionalId);
-    await assertServicesExist(tx, list.map((l) => l.serviceId));
+    await assertServicesExist(
+      tx,
+      list.map((l) => l.serviceId),
+    );
     await tx.delete(professionalServices).where(eq(professionalServices.professionalId, professionalId));
     const dedup = new Map(list.map((l) => [l.serviceId, l]));
     if (dedup.size) {

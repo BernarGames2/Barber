@@ -25,7 +25,10 @@ beforeAll(async () => {
   ownerB = (await signup(ctx, 'Dono B')).client;
   shopA = await setupShop(ownerA);
   shopB = await setupShop(ownerB);
-  const c = await ownerA.post(`${shopA.base}/customers`, { name: 'Cliente Secreto A', phone: '11 91234-0001' });
+  const c = await ownerA.post(`${shopA.base}/customers`, {
+    name: 'Cliente Secreto A',
+    phone: '11 91234-0001',
+  });
   customerA = json(c).id;
   const a = await ownerA.post(`${shopA.base}/appointments`, {
     customerId: customerA,
@@ -80,7 +83,9 @@ describe('isolamento entre estabelecimentos (API)', () => {
     // B tenta ler/alterar recursos de A pela rota do próprio estabelecimento
     expect((await ownerB.get(`${shopB.base}/customers/${customerA}`)).statusCode).toBe(404);
     expect((await ownerB.get(`${shopB.base}/appointments/${appointmentA}`)).statusCode).toBe(404);
-    expect((await ownerB.patch(`${shopB.base}/services/${shopA.services.corte}`, { priceCents: 1 })).statusCode).toBe(404);
+    expect(
+      (await ownerB.patch(`${shopB.base}/services/${shopA.services.corte}`, { priceCents: 1 })).statusCode,
+    ).toBe(404);
     expect((await ownerB.post(`${shopB.base}/appointments/${appointmentA}/cancel`, {})).statusCode).toBe(404);
 
     // B tenta agendar o cliente de A, ou com o profissional/serviço de A
@@ -117,7 +122,10 @@ describe('isolamento entre estabelecimentos (API)', () => {
   });
 
   it('a mesma pessoa pode ser cliente de dois estabelecimentos (telefone único por estabelecimento)', async () => {
-    const res = await ownerB.post(`${shopB.base}/customers`, { name: 'Mesmo Telefone', phone: '11 91234-0001' });
+    const res = await ownerB.post(`${shopB.base}/customers`, {
+      name: 'Mesmo Telefone',
+      phone: '11 91234-0001',
+    });
     expect(res.statusCode).toBe(201);
   });
 
@@ -125,7 +133,9 @@ describe('isolamento entre estabelecimentos (API)', () => {
     const anon = new TestClient(ctx);
     expect((await anon.get(`${shopA.base}/services`)).statusCode).toBe(401);
     expect((await ownerA.get('/v1/tenants/nao-e-uuid/services')).statusCode).toBe(404);
-    expect((await ownerA.get('/v1/tenants/00000000-0000-4000-8000-000000000000/services')).statusCode).toBe(404);
+    expect((await ownerA.get('/v1/tenants/00000000-0000-4000-8000-000000000000/services')).statusCode).toBe(
+      404,
+    );
   });
 
   it('auditoria registra operações com o estabelecimento correto', async () => {
@@ -164,7 +174,10 @@ describe('papéis e permissões', () => {
     });
     expect(book.statusCode).toBe(201);
 
-    expect((await staff.post(`${shopA.base}/services`, { name: 'X', durationMin: 30, priceCents: 100 })).statusCode).toBe(403);
+    expect(
+      (await staff.post(`${shopA.base}/services`, { name: 'X', durationMin: 30, priceCents: 100 }))
+        .statusCode,
+    ).toBe(403);
     expect((await staff.put(`${shopA.base}/business-hours`, { intervals: [] })).statusCode).toBe(403);
     expect((await staff.patch(shopA.base, { name: 'Novo nome' })).statusCode).toBe(403);
     expect((await staff.post(`${shopA.base}/customers/${customerA}/anonymize`)).statusCode).toBe(403);
@@ -180,7 +193,11 @@ describe('papéis e permissões', () => {
   });
 
   it('gerente altera catálogo e agenda fora do horário', async () => {
-    const svc = await manager.post(`${shopA.base}/services`, { name: 'Sobrancelha', durationMin: 15, priceCents: 2000 });
+    const svc = await manager.post(`${shopA.base}/services`, {
+      name: 'Sobrancelha',
+      durationMin: 15,
+      priceCents: 2000,
+    });
     expect(svc.statusCode).toBe(201);
     const outside = await manager.post(`${shopA.base}/appointments`, {
       newCustomer: { name: 'Cliente VIP' },
