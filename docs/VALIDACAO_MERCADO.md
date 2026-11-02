@@ -50,6 +50,36 @@ Prefira conversa por áudio/ligação ou presencial com o **dono ou gerente** �
 10. Toparia testar **30 dias grátis**, sem cartão, como uma das 5 barbearias parceiras fundadoras? (sim/não)
 11. Posso voltar a falar com você quando estiver pronto? (anote o contato)
 
+### Versão para WhatsApp: tudo numa mensagem só
+
+Para não depender de uma primeira resposta, a mensagem já leva as perguntas (o nome da barbearia entra no lugar
+de `{nome}`). As perguntas 10 e 11 do roteiro viram a 9 e a própria resposta. A pergunta de preço inclui "nenhum
+desses" para não induzir a resposta.
+
+```
+Oi, pessoal da {nome}! Tudo bem?
+
+Estou criando uma ferramenta para barbearias e queria ouvir quem está no dia a dia. Não é venda. Se puderem
+responder (pode ser por áudio, do jeito que for mais fácil), ajuda muito:
+
+1. Hoje os clientes marcam horário como? (WhatsApp, ligação, app, ordem de chegada)
+2. Quem responde as mensagens e ligações? Dá conta enquanto está cortando?
+3. Numa semana normal, mais ou menos quantas mensagens ou ligações ficam sem resposta ou são respondidas tarde?
+4. Vocês usam algum sistema de agenda? Qual, e quanto pagam por mês?
+5. Quantos clientes faltam sem avisar por semana?
+6. Imagina uma recepcionista virtual que responde no WhatsApp e no telefone da própria barbearia, 24 horas, só
+   oferece horários que estão livres na agenda, confirma, remarca, cancela e manda lembrete. Isso ajudaria vocês?
+   O que deixaria vocês com receio?
+7. Ela deveria atender sempre ou só quando a equipe não consegue?
+8. Quanto pagariam por mês por isso: R$ 99, R$ 149 ou R$ 299 (com ligações incluídas)? Ou nenhum desses?
+9. Quando estiver pronta, topariam testar 30 dias grátis, sem cartão?
+
+Muito obrigado!
+```
+
+Envie no máximo **10 por dia**, em horário comercial: muitas mensagens seguidas para números fora dos contatos
+podem fazer o WhatsApp restringir a conta.
+
 ## 4. Planilha de registro
 
 Use o modelo [`validacao-mercado-modelo.csv`](validacao-mercado-modelo.csv) (abre no Excel ou Google Planilhas).
